@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from networkx import Graph
 from numpy import ndarray
 
-class Model(ABC):
 
+class Model(ABC):
     __graph: Graph
 
     def __init__(self, graph):
@@ -16,4 +16,4 @@ class Model(ABC):
     @abstractmethod
     def info(self) -> str: pass
 
-    def getGraph(self) -> Graph: return self.__graph
+    def get_graph(self) -> Graph: return self.__graph
