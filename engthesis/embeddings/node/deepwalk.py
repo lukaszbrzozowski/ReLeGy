@@ -62,6 +62,13 @@ class DeepWalk(Model):
         return "TBI"
 
     def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01) -> ndarray:
+        """
+        The main embedding function of the DeepWalk model.
+        :param iter_num: Number of epochs
+        :param alpha: Learning rate
+        :param min_alpha: Minimal value of the learning rate; if defined, alpha decreases linearly
+        :return: ndarray
+        """
         rw = self.generate_random_walks()
         self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
                                 min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=0)
