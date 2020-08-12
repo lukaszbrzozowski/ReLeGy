@@ -20,12 +20,13 @@ class GraphFactorization(Model):
     def initialize_parameters(self, parameters) -> None:
         """
 
+        :rtype: None
         :param parameters: dictionary of model parameters
         A - weight matrix, default is adjacency matrix
         d - dimension of returned vectors
         eps - optimization stop parameter
         lmbd - regularization parameter
-        :return:
+        :return: None
         """
         self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph())
         self.__d = parameters["d"] if "d" in parameters else 2

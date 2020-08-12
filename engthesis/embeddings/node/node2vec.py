@@ -103,7 +103,7 @@ class Node2Vec(Model):
         """
         rw = self.generate_random_walks()
         self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
-                                min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=negative)
+                                min_count=0, size=self.__d, window=self.__window, sg=1, hs=0, negative=negative)
         self.__model.build_vocab(sentences=rw)
         self.__model.train(sentences=rw, total_examples=len(rw), total_words=len(self.get_graph().nodes),
                            epochs=iter_num)

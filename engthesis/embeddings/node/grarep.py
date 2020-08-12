@@ -64,7 +64,7 @@ class GraRep(Model):
         self.__isEmbed = True
         return returnW
 
-    def getMatrixDict(self) -> dict:
+    def get_matrix_dict(self) -> dict:
         if not self.__isEmbed:
             print("The graph has not been embedded yet")
         return self.__dict
