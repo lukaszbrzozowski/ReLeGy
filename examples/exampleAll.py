@@ -1,5 +1,5 @@
-from engthesis.embeddings.node.laplacian_embeddings import LaplacianEmbeddings
-from engthesis.embeddings.node.graph_factorization import GraphFactorization
+from engthesis.embeddings.node.laplacianembeddings import LaplacianEmbeddings
+from engthesis.embeddings.node.graphfactorization import GraphFactorization
 from engthesis.embeddings.node.grarep import GraRep
 from engthesis.embeddings.node.hope import HOPE
 import networkx as nx
