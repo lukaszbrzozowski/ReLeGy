@@ -3,7 +3,7 @@ import unittest
 from engthesis.embeddings.node.grarep import GraRep
 from engthesis.graphs.examples import examplesDict
 
-class GraphFactorizationTestCase(unittest.TestCase):
+class GraRepTestCase(unittest.TestCase):
     def testEmbedsWithoutError(self):
         for graph in examplesDict.values():
             model = GraRep(graph)
