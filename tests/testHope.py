@@ -1,12 +1,12 @@
 import unittest
 
-from engthesis.embeddings.node.node2vec import Node2Vec
+from engthesis.embeddings.node.hope import HOPE
 from engthesis.graphs.examples import examplesDict
 
 class GraphFactorizationTestCase(unittest.TestCase):
     def testEmbedsWithoutError(self):
         for graph in examplesDict.values():
-            model = Node2Vec(graph)
+            model = HOPE(graph)
             model.embed()
         self.assertEqual(True, True)
 

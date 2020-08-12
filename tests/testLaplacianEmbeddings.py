@@ -1,12 +1,12 @@
 import unittest
 
-from engthesis.embeddings.node.node2vec import Node2Vec
+from engthesis.embeddings.node.laplacianembeddings import LaplacianEmbeddings
 from engthesis.graphs.examples import examplesDict
 
-class GraphFactorizationTestCase(unittest.TestCase):
+class MyTestCase(unittest.TestCase):
     def testEmbedsWithoutError(self):
         for graph in examplesDict.values():
-            model = Node2Vec(graph)
+            model = LaplacianEmbeddings(graph)
             model.embed()
         self.assertEqual(True, True)
 
