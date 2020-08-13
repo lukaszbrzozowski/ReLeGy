@@ -9,7 +9,7 @@ from engthesis.model.base import Model
 
 
 class Node2Vec(Model):
-    __A: matrix
+    # TODO move to init, remove initialize_parameters from all the methods
     __d: int
     __T: int
     __gamma: int
@@ -52,7 +52,7 @@ class Node2Vec(Model):
         A: matrix = to_numpy_matrix(G)
         p: float = self.__p
         q: float = self.__q
-        random_walks: ndarray = np.empty((0, self.__T))
+        random_walks: ndarray = np.empty((N * self.__gamma, self.__T))
         for i in range(self.__gamma):
             # random_walk_matrix contains random walks for 1 iteration of i
             random_walk_matrix = np.empty((N, self.__T))
@@ -77,15 +77,15 @@ class Node2Vec(Model):
                 probabilities_mask = np.where(mask_q, probabilities_mask / q, probabilities_mask)
                 probabilities = np.multiply(A[next_vertices, :], probabilities_mask)
                 # normalizing probabilities
-                probabilities = np.multiply(probabilities, 1 / np.repeat(np.sum(probabilities, axis=1),
-                                                                         [N]).reshape(N, N))
+                normalized_probabilities = np.multiply(probabilities, 1 / np.repeat(np.sum(probabilities, axis=1),
+                                                                                    [N]).reshape(N, N))
                 cur_next_vertices = [np.random.choice(np.arange(N), size=1,
-                                                      p=np.asarray(probabilities[it, :]).reshape(-1))[0]
+                                                      p=np.asarray(normalized_probabilities[it, :]).reshape(-1))[0]
                                      for it in range(N)]
                 random_walk_matrix[:, j] = cur_next_vertices
                 vertices, next_vertices = next_vertices, cur_next_vertices
 
-            random_walks = np.concatenate((random_walks, random_walk_matrix))
+            random_walks[(i * N):((i + 1) * N), :] = random_walk_matrix
 
         return random_walks.astype(int).astype(str).tolist()
 
