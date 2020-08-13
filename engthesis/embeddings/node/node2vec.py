@@ -9,35 +9,21 @@ from engthesis.model.base import Model
 
 
 class Node2Vec(Model):
-    # TODO move to init, remove initialize_parameters from all the methods
-    __d: int
-    __T: int
-    __gamma: int
-    __window: int
-    __p: float
-    __q: float
 
     def __init__(self, graph, **kwargs) -> None:
         """
 
         :rtype: object
         """
+        __d: int
+        __T: int
+        __gamma: int
+        __window: int
+        __p: float
+        __q: float
         super().__init__(graph)
-        self.initialize_parameters(kwargs)
-        self.__model = None
+        parameters = kwargs
 
-    def initialize_parameters(self, parameters) -> None:
-        """
-
-        :param parameters:  dictionary of model parameters
-        d - dimension of returned vectors
-        T - length of random walk
-        gamma - number of random walks starting in a single vertex, default 5
-        window - window size of the SkipGram model
-        p - parameter of random walks, default 1
-        q - parameter of random walks, default 1
-        :return:
-        """
         self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
         self.__T = parameters["T"] if "T" in parameters else 2
         self.__window = parameters["window"] if "window" in parameters else 5
@@ -45,6 +31,8 @@ class Node2Vec(Model):
 
         self.__p = parameters["p"] if "p" in parameters else 1
         self.__q = parameters["q"] if "q" in parameters else 1
+
+        self.__model = None
 
     def generate_random_walks(self) -> Any:
         G = self.get_graph()

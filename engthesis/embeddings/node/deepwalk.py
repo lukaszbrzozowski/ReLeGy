@@ -6,6 +6,7 @@ from gensim.models import Word2Vec
 from engthesis.model.base import Model
 import copy
 
+
 class DeepWalk(Model):
 
     def __init__(self, graph, **kwargs) -> None:

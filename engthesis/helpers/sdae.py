@@ -45,12 +45,22 @@ class SDAE(object):
         @param optimizer: The optimizer to use. Options can be found here: https://keras.io/optimizers/
         @param verbose: 1 to be verbose
         '''
+        n_layers: int
+        n_hid: list
+        enc_act: list
+        dec_act: list
+        bias: bool
+        dropout: list
+        loss_fn: str
+        batch_size: int
+        nb_epoch: int
+        optimizer: int
+        verbose: bool
         self.n_layers = n_layers
 
         # if only one value specified for n_hid, dropout, enc_act or dec_act, use the same parameters for all layers.
         self.n_hid, self.dropout, self.enc_act, self.dec_act = self._assert_input(n_layers, n_hid, dropout, enc_act,
                                                                                   dec_act)
-
         self.bias = bias
 
         self.loss_fn = loss_fn
@@ -195,7 +205,7 @@ class SDAE(object):
         else:
             assert(type(n_hid[0]) == int)
 
-        if type(dropout) == float or type(dropout) == float:
+        if type(dropout) == int or type(dropout) == float:
             dropout = [dropout] * n_layers
 
         if type(enc_act) == str:
