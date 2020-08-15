@@ -2,7 +2,7 @@
 @author madhumita
 @author lukaszbrzozowski
 The source code: https://github.com/MadhumitaSushil/SDAE
-It was updated and slightly modified to allow for fine-tuning of GDNR
+It was updated and slightly modified to allow for fine-tuning of DNGR
 """
 
 import os
@@ -85,6 +85,7 @@ class SDAE(object):
         @param data_in: input data (scipy sparse matrix supported)
         @param get_enc_model: True to get a Sequential model with Dropout and encoding layers from SDAE.
                               If False, returns a list of all the encoding-decoding models within our stacked denoising autoencoder.
+        @param get_enc_dec_model: If true, returns the model built with the decoder layers. Overrides get_enc_model
         @param model_layers: Pretrained cur_model layers, to continue training pretrained model_layers, if required
         '''
         if model_layers is not None:
@@ -203,7 +204,7 @@ class SDAE(object):
         if type(n_hid) == int:
             n_hid = [n_hid] * n_layers
         else:
-            assert(type(n_hid[0]) == int)
+            assert(type(n_hid[0]) == int or type(n_hid[0]) == np.int32)
 
         if type(dropout) == int or type(dropout) == float:
             dropout = [dropout] * n_layers
