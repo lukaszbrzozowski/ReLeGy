@@ -9,7 +9,6 @@ from engthesis.model.base import Model
 
 
 class DeepWalk(Model):
-    __A: matrix
     __d: int
     __T: int
     __gamma: int
