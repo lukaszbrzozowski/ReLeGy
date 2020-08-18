@@ -20,7 +20,7 @@ class LINE(Model):
         self.__model = None
 
     def embed(self):
-        Frob = lambda U: np.sum(U**2)
+        Frob = lambda U: np.linalg.norm(U)
         graph = self.get_graph()
         n_edges = len(graph.edges)
         p1 = lambda x, y: 1/(1+np.exp(-np.dot(x,y)))
