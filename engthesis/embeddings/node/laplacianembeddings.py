@@ -9,24 +9,16 @@ import numpy as np
 
 
 class LaplacianEmbeddings(Model):
-    __A: csr_matrix
-    __d: int
 
     def __init__(self, graph, **kwargs) -> None:
         """
 
         :rtype: object
         """
+        __A: csr_matrix
+        __d: int
         super().__init__(graph)
-        self.initialize_parameters(kwargs)
-
-    def initialize_parameters(self, parameters) -> None:
-        """
-        :param parameters: dictionary of model parameters
-        A - weight matrix, default is adjacency matrix
-        d - dimension of returned vectors
-        :return: None
-        """
+        parameters = kwargs
         self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph())
         self.__d = parameters["d"] if "d" in parameters else 2
 
