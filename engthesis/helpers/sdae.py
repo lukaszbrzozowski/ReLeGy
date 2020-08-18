@@ -1,21 +1,22 @@
 """
 @author madhumita
+@author lukaszbrzozowski
+The source code: https://github.com/MadhumitaSushil/SDAE
+It was updated and slightly modified to allow for fine-tuning of DNGR
 """
 
 import os
-
-os.environ['THEANO_FLAGS'] = "device=gpu1,floatX=float32"
-os.environ['KERAS_BACKEND'] = "theano"
-os.environ['PYTHONHASHSEED'] = '0'
-
 import numpy as np
 
 from keras.models import Model, Sequential
 from keras.layers import Input
 from keras.layers.core import Dense, Dropout
-from keras.callbacks import EarlyStopping
 
 from . import nn_utils
+
+os.environ['THEANO_FLAGS'] = "device=gpu1,floatX=float32"
+os.environ['KERAS_BACKEND'] = "theano"
+os.environ['PYTHONHASHSEED'] = '0'
 
 
 class SDAE(object):
@@ -28,8 +29,8 @@ class SDAE(object):
     Journal of Machine Learning Research 11, no. Dec (2010): 3371-3408.
     '''
 
-    def __init__(self, n_layers=1, n_hid=[500], dropout=[0.05], enc_act=['sigmoid'], dec_act=['linear'], bias=True,
-                 loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='rmsprop', verbose=1):
+    def __init__(self, n_layers=1, n_hid=500, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
+                 loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1):
         '''
         Initializes parameters for stacked denoising autoencoders
         @param n_layers: number of layers, i.e., number of autoencoders to stack on top of each other.
@@ -44,12 +45,22 @@ class SDAE(object):
         @param optimizer: The optimizer to use. Options can be found here: https://keras.io/optimizers/
         @param verbose: 1 to be verbose
         '''
+        n_layers: int
+        n_hid: list
+        enc_act: list
+        dec_act: list
+        bias: bool
+        dropout: list
+        loss_fn: str
+        batch_size: int
+        nb_epoch: int
+        optimizer: int
+        verbose: bool
         self.n_layers = n_layers
 
         # if only one value specified for n_hid, dropout, enc_act or dec_act, use the same parameters for all layers.
         self.n_hid, self.dropout, self.enc_act, self.dec_act = self._assert_input(n_layers, n_hid, dropout, enc_act,
                                                                                   dec_act)
-
         self.bias = bias
 
         self.loss_fn = loss_fn
@@ -62,7 +73,7 @@ class SDAE(object):
 
         self.verbose = verbose
 
-    def get_pretrained_sda(self, data_in, get_enc_model=True, model_layers=None):
+    def get_pretrained_sda(self, data_in, get_enc_model=True, get_enc_dec_model=False, model_layers=None):
         '''
         Pretrains layers of a stacked denoising autoencoder to generate low-dimensional representation of data.
         Returns a Sequential model with the Dropout layer and pretrained encoding layers added sequentially.
@@ -74,6 +85,7 @@ class SDAE(object):
         @param data_in: input data (scipy sparse matrix supported)
         @param get_enc_model: True to get a Sequential model with Dropout and encoding layers from SDAE.
                               If False, returns a list of all the encoding-decoding models within our stacked denoising autoencoder.
+        @param get_enc_dec_model: If true, returns the model built with the decoder layers. Overrides get_enc_model
         @param model_layers: Pretrained cur_model layers, to continue training pretrained model_layers, if required
         '''
         if model_layers is not None:
@@ -82,6 +94,7 @@ class SDAE(object):
             model_layers = [None] * self.n_layers
 
         encoders = []
+        decoders = []
 
         recon_mse = 0
 
@@ -114,15 +127,11 @@ class SDAE(object):
 
             print("Training layer " + str(cur_layer))
 
-            # Early stopping to stop training when val loss increases for 1 epoch
-            early_stopping = EarlyStopping(monitor='loss', patience=1, verbose=0)
-
-            hist = cur_model.fit_generator(generator=nn_utils.batch_generator(
+            hist = cur_model.fit(x=nn_utils.batch_generator(
                 data_in, data_in,
                 batch_size=self.batch_size,
                 shuffle=True
             ),
-                callbacks=[early_stopping],
                 epochs=self.nb_epoch,
                 steps_per_epoch=data_in.shape[0],
                 verbose=self.verbose
@@ -132,8 +141,10 @@ class SDAE(object):
 
             model_layers[cur_layer] = cur_model
             encoder_layer = cur_model.layers[-2]
+            decoder_layer = cur_model.layers[-1]
 
             encoders.append(encoder_layer)
+            decoders.append(decoder_layer)
 
             if cur_layer == 0:
                 recon_mse = self._get_recon_error(cur_model, data_in, n_out=cur_model.layers[-1].output_shape[1])
@@ -142,14 +153,16 @@ class SDAE(object):
                                                     batch_size=self.batch_size)
             assert data_in.shape[1] == self.n_hid[cur_layer], "Output of hidden layer not retrieved"
 
-        if get_enc_model:
+        if get_enc_model or get_enc_dec_model:
             final_model = self._build_model_from_encoders(encoders, dropout_all=False)  # , final_act_fn= final_act_fn)
+            if get_enc_dec_model:
+                final_model = self._build_model_from_encoders_and_decoders(final_model, decoders)
         else:
             final_model = model_layers
 
         return final_model, data_in, recon_mse
 
-    def _build_model_from_encoders(self, encoding_layers, dropout_all=False):
+    def _build_model_from_encoders(self, encoding_layers, dropout_all=False) -> Sequential:
         '''
         Builds a deep NN model that generates low-dimensional representation of input, based on pretrained layers.
         @param encoding_layers: pretrained encoder layers
@@ -168,23 +181,39 @@ class SDAE(object):
         return model
 
     @staticmethod
+    def _build_model_from_encoders_and_decoders(enc_model, decoding_layers) -> Sequential:
+        """
+        Build model with both the encoded and decoded groups of layers
+        :param enc_model: Model created with _build_model_from_encoders
+        :param decoding_layers: pretrained decoder layers
+        :return: model with the encoding and decoding layers as NN
+        """
+        model = enc_model
+        for i in range(1, len(decoding_layers) + 1):
+            model.add(decoding_layers[-i])
+
+        return model
+
+    @staticmethod
     def _assert_input(n_layers, n_hid, dropout, enc_act, dec_act):
         """
         If the hidden nodes, dropout proportion, encoder activation function or decoder activation function is given, it uses the same parameter for all the layers.
         Errors out if there is a size mismatch between number of layers and parameters for each layer.
         """
 
-        if len(n_hid) == 1:
-            n_hid = n_hid * n_layers
+        if type(n_hid) == int:
+            n_hid = [n_hid] * n_layers
+        else:
+            assert(type(n_hid[0]) == int or type(n_hid[0]) == np.int32)
 
-        if len(dropout) == 1:
-            dropout = dropout * n_layers
+        if type(dropout) == int or type(dropout) == float:
+            dropout = [dropout] * n_layers
 
-        if len(enc_act) == 1:
-            enc_act = enc_act * n_layers
+        if type(enc_act) == str:
+            enc_act = [enc_act] * n_layers
 
-        if len(dec_act) == 1:
-            dec_act = dec_act * n_layers
+        if type(dec_act) == str:
+            dec_act = [dec_act] * n_layers
 
         assert (n_layers == len(n_hid) == len(dropout) == len(enc_act) == len(
             dec_act)), "Please specify as many hidden nodes, dropout proportion on input, and encoder and decoder activation function, as many layers are there, using list data structure"
@@ -233,7 +262,7 @@ class SDAE(object):
         @param n_out: number of model output nodes
         """
         train_recon = self._get_intermediate_output(model, data_in, n_layer=-1, train=0, n_out=n_out,
-                                                    batch_size=self.batch_size)  # train = 0 because we do not want to use dropout to get hidden node value, since is a train-only behavior, used only to learn weights. output of third layer: output layer
+                                                    batch_size=self.batch_size)
         recon_mse = np.mean(np.square(train_recon - data_in), axis=0)
 
         recon_mse = np.ravel(recon_mse)

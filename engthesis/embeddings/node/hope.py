@@ -3,31 +3,23 @@ import numpy as np
 from numpy import matrix, ndarray
 from engthesis.model.base import Model
 
+
 class HOPE(Model):
-    __A: matrix
-    __d: int
-    __proximity: str
-    __param: float
-    __matrixDict: dict
-    __isEmbed: bool
 
     def __init__(self, graph, **kwargs) -> None:
         """
 
         :rtype: object
         """
+        __A: matrix
+        __d: int
+        __proximity: str
+        __param: float
+        __matrixDict: dict
+        __isEmbed: bool
+
         super().__init__(graph)
-        self.initialize_parameters(kwargs)
-
-    def initialize_parameters(self, parameters) -> None:
-        """
-
-        :param parameters: dictionary of model parameters
-        d - dimension of returned vectors
-        proximity - method of proximity calculation. Available are: "Katz", "RPR", "CN", "AA". Default is "CN"
-        param - parameter beta of Katz proximity or alpha of RPR - default 0.1. Ignored otherwise
-        :return: None
-        """
+        parameters = kwargs
         self.__A = to_numpy_matrix(self.get_graph())
         self.__proximity = parameters["proximity"] if "proximity" in parameters else "Katz"
         self.__d = parameters["d"] if "d" in parameters else 2
