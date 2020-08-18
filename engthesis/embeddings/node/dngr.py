@@ -1,5 +1,5 @@
 from engthesis.model.base import Model
-from networkx import to_numpy_array
+from networkx import to_numpy_array, Graph
 import numpy as np
 from numpy import ndarray
 from engthesis.helpers.sdae import SDAE
@@ -7,22 +7,28 @@ from engthesis.helpers.sdae import SDAE
 
 class DNGR(Model):
 
-    def __init__(self, graph, **kwargs):
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 alpha: float = 0.9,
+                 T: int = 40):
         """
-
-        :param graph: Graph to be embedded
-        :param kwargs: set of parameters of the method:
-        - d - dimension of the embedding
-        - alpha - probability of continuing the random walk in the random surfing
-        - T - the length of random walks
-        - gamma - number of random walks starting from each vertex
-
+        The initialization method of the DNGR model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param alpha: probability of continuing the random walk instead of returning to the initial vertex
+        :param T: Length of the random walks
         """
+        __d: int
+        __alpha: float
+        __T: int
+        __model: SDAE
+
         super().__init__(graph)
-        parameters = kwargs
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__alpha = parameters["alpha"] if "alpha" in parameters else 0.9
-        self.__T = parameters["T"] if "T" in parameters else 10
+
+        self.__d = d
+        self.__alpha = alpha
+        self.__T = T
         self.__model = None
 
     def info(self) -> str:
@@ -61,7 +67,10 @@ class DNGR(Model):
     def embed(self, n_layers=1, n_hid=500, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
               loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1, get_enc_model=True,
               get_enc_dec_model=False) -> ndarray:
-        assert(self.__d == n_hid[-1])
+        if type(n_hid) == int:
+            assert(n_hid == self.__d)
+        else:
+            assert(self.__d == n_hid[-1])
         M = self.__random_surf()
         PPMI = self.__get_ppmi(M)
         sdae = SDAE(n_layers, n_hid, dropout, enc_act, dec_act, bias, loss_fn, batch_size, nb_epoch, optimizer, verbose)

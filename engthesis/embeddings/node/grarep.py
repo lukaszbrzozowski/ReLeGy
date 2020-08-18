@@ -1,15 +1,23 @@
 import numpy as np
 from numpy import matrix, ndarray
 from engthesis.model.base import Model
-from networkx import to_numpy_matrix
+from networkx import to_numpy_matrix, Graph
 
 
 class GraRep(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 similarity_matrix: matrix = None,
+                 K: int = 1,
+                 lmbd: float = 1) -> None:
         """
-
-        :rtype: object
+        The initialization method of the GraRep model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param K: Maximal order of similarity to be captured. Also, the returned matrix has dimensions N x (K * d)
+        :param lmbd: Regularisation coefficient.
         """
         __A: matrix
         __d: int
@@ -18,11 +26,10 @@ class GraRep(Model):
         __isEmbed: bool
 
         super().__init__(graph)
-        parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else to_numpy_matrix(self.get_graph())
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__K = parameters["K"] if "K" in parameters else 1
-        self.__lmbd = parameters["lmbd"] if "lmbd" in parameters else 1
+        self.__A = similarity_matrix if similarity_matrix is not None else to_numpy_matrix(self.get_graph())
+        self.__d = d
+        self.__K = K
+        self.__lmbd = lmbd
         self.__isEmbed = False
         self.__modelDict = {}
 

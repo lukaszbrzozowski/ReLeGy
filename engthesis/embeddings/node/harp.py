@@ -4,12 +4,40 @@ from engthesis.embeddings.node.node2vec import Node2Vec
 import numpy as np
 from numpy import ndarray
 import networkx as nx
+from networkx import Graph
 from gensim.models import Word2Vec
 from six import iteritems
 
 
 class HARP(Model):
-    def __init__(self, graph, **kwargs):
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 method: str = "DeepWalk",
+                 threshold: int = 100,
+                 L: int = None,
+                 T: int = 40,
+                 window_size: int = 5,
+                 gamma: int = 1,
+                 p: float = 1,
+                 q: float = 1,
+                 verbose: bool = 1):
+        """
+        The initialization method of the HARP model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param method: The method to use in representation learning after the graph coarsening.
+        Possible are "DeepWalk", "Node2Vec" and #TODO add LINE to HARP
+        "LINE"
+        :param threshold: The maximal number of vertices of the coarsened graph. Not used if L is passed.
+        :param L: Number of iterations of the graph coarsening.
+        :param T: Length of the random walks (DeepWalk and Node2Vec)
+        :param gamma: Number of times a random walk is started from each vertex (DeepWalk and Node2Vec)
+        :param window_size: Window size for the SkipGram model (DeepWalk and Node2Vec)
+        :param p: Parameter of the biased random walks (Node2Vec)
+        :param q: Parameter of the biased random walks (Node2Vec)
+        :param verbose: Verbosity of the graph coarsening
+        """
 
         __L: int
         __threshold: int
@@ -23,22 +51,21 @@ class HARP(Model):
         __q: float
 
         super().__init__(graph)
-        parameters = kwargs
-        self.__threshold = parameters["threshold"] if "threshold" in parameters else 100
-        self.__L = parameters["L"] if "L" in parameters else None
+        self.__threshold = threshold
+        self.__L = L
         if self.__L is not None:
             self.__threshold = None
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__method = parameters["method"] if "method" in parameters else "DeepWalk"
+        self.__d = d
+        self.__method = method
         assert(self.__method in ["DeepWalk", "Node2Vec", "LINE"])
 
-        self.__T = parameters["T"] if "T" in parameters else 2
-        self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
-        self.__window = parameters["window"] if "window" in parameters else 5
-        self.__verbose = parameters["verbose"] if "verbose" in parameters else True
+        self.__T = T
+        self.__gamma = gamma
+        self.__window = window_size
+        self.__verbose = verbose
 
-        self.__p = parameters["p"] if "p" in parameters else 1
-        self.__q = parameters["q"] if "q" in parameters else 1
+        self.__p = p
+        self.__q = q
         self.__model = None
 
     @staticmethod
@@ -183,10 +210,10 @@ class HARP(Model):
         last_graph = graph_dict[graph_names[-1]]
         random_walks = None
         if self.__method == "DeepWalk":
-            dw = DeepWalk(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
+            dw = DeepWalk(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
             random_walks = dw.generate_random_walks()
         elif self.__method == "Node2Vec":
-            n2v = Node2Vec(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window,
+            n2v = Node2Vec(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
                            p=self.__p, q=self.__q)
             random_walks = n2v.generate_random_walks()
         assert(random_walks is not None)
@@ -203,10 +230,10 @@ class HARP(Model):
             cur_graph = graph_dict[graph_names[i]]
 
             if self.__method == "DeepWalk":
-                dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
+                dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
                 random_walks = dw.generate_random_walks()
             elif self.__method == "Node2Vec":
-                n2v = Node2Vec(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window,
+                n2v = Node2Vec(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
                                p=self.__p, q=self.__q)
                 random_walks = n2v.generate_random_walks()
 

@@ -1,4 +1,4 @@
-from networkx import to_numpy_matrix
+from networkx import to_numpy_matrix, Graph
 import numpy as np
 from numpy import matrix, ndarray
 from engthesis.model.base import Model
@@ -6,10 +6,18 @@ from engthesis.model.base import Model
 
 class HOPE(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 proximity: str = "Katz",
+                 parameter: float = 0.1) -> None:
         """
-
-        :rtype: object
+        The initialization method of the HOPE model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param proximity: Chosen proximity function used to produce the proximity matrix
+        :param parameter: a parameter of the proximity function. Beta for Katz proximity, alpha for RPR.
+        Ignored otherwise
         """
         __A: matrix
         __d: int
@@ -19,11 +27,10 @@ class HOPE(Model):
         __isEmbed: bool
 
         super().__init__(graph)
-        parameters = kwargs
         self.__A = to_numpy_matrix(self.get_graph())
-        self.__proximity = parameters["proximity"] if "proximity" in parameters else "Katz"
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__param = parameters["param"] if "param" in parameters else 0.1
+        self.__proximity = proximity
+        self.__d = d
+        self.__param = parameter
         self.__matrixDict = {}
         self.__isEmbed = False
 
@@ -32,6 +39,7 @@ class HOPE(Model):
 
     def embed(self) -> ndarray:
         N = len(self.get_graph().nodes)
+        Mg, Ml = None, None
         if self.__proximity == "Katz" or self.__proximity not in ["RPR", "AA", "CN"]:
             par = self.__param
             Mg = np.identity(N) - par*self.__A
@@ -50,7 +58,8 @@ class HOPE(Model):
             D = np.diag([1/(np.sum(self.__A[:, i])+np.sum(self.__A[i, :])) for i in range(N)])
             Mg = np.identity(N)
             Ml = self.__A @ D @ self.__A
-        #JDGSVD shall be implemented here
+        assert(Mg is not None and Ml is not None)
+        # JDGSVD shall be implemented here
         S = np.linalg.inv(Mg) @ Ml
         U, D, VT = np.linalg.svd(S)
         Ds = np.sqrt(np.diag(D)[:self.__d, :self.__d])
