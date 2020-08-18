@@ -2,7 +2,7 @@ from typing import Any
 
 from networkx import to_numpy_matrix
 import numpy as np
-from numpy import matrix, ndarray
+from numpy import ndarray
 from gensim.models import Word2Vec
 
 from engthesis.model.base import Model

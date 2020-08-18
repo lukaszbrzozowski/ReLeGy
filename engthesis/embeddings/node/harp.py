@@ -30,7 +30,7 @@ class HARP(Model):
             self.__threshold = None
         self.__d = parameters["d"] if "d" in parameters else 2
         self.__method = parameters["method"] if "method" in parameters else "DeepWalk"
-        assert (self.__method in ["DeepWalk", "Node2Vec", "LINE"])
+        assert(self.__method in ["DeepWalk", "Node2Vec", "LINE"])
 
         self.__T = parameters["T"] if "T" in parameters else 2
         self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
@@ -130,7 +130,7 @@ class HARP(Model):
                     print("Number of nodes: " + str(len(G.nodes)))
                     print("Number of edges: " + str(len(G.edges)))
                 if np.all(cln == cln[0]):
-                    print("The contraction stopped early - the graph was collapsed to a single node")
+                    print("The collapsion stopped early - the graph was collapsed to a single node")
                     break
             return graph_dict, transition_matrix
         i = 1
@@ -161,7 +161,6 @@ class HARP(Model):
         return weight_matrix
 
     def __generate_new_weights(self, weight_matrix, transition_matrix):
-        uqs = np.sort(np.unique(transition_matrix[:, 0]))
         sorter = np.argsort(weight_matrix[:, 0])
         permutation = sorter[np.searchsorted(weight_matrix[:, 0], transition_matrix[:, 1], sorter=sorter)]
         assert(np.all(weight_matrix[:, 0][permutation] == transition_matrix[:, 1]))
@@ -202,7 +201,6 @@ class HARP(Model):
 
         for i in np.arange(len(graph_names)-2, -1, -1):
             cur_graph = graph_dict[graph_names[i]]
-            dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
 
             if self.__method == "DeepWalk":
                 dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
@@ -218,7 +216,8 @@ class HARP(Model):
             self.__model.build_vocab(sentences=random_walks)
             self.__update_model_weights(new_wm)
 
-            self.__model.train(sentences=random_walks, total_examples=len(random_walks), total_words=len(cur_graph.nodes),
+            self.__model.train(sentences=random_walks, total_examples=len(random_walks),
+                               total_words=len(cur_graph.nodes),
                                epochs=iter_num)
             if i > 0:
                 weight_matrix = self.__get_weights_from_model()

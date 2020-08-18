@@ -12,3 +12,4 @@ nx.draw(G, with_labels=True)
 plt.show()
 plt.scatter(Z[:, 0], Z[:, 1])
 plt.show()
+
