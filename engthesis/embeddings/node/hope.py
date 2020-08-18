@@ -62,9 +62,9 @@ class HOPE(Model):
         # JDGSVD shall be implemented here
         S = np.linalg.inv(Mg) @ Ml
         U, D, VT = np.linalg.svd(S)
-        Ds = np.sqrt(np.diag(D)[:self.__d, :self.__d])
-        Us = U[:, :self.__d] @ Ds
-        Ut = VT.T[:, :self.__d] @ Ds
+        Ds = np.asarray(np.sqrt(np.diag(D)[:self.__d, :self.__d]))
+        Us = np.asarray(U[:, :self.__d] @ Ds)
+        Ut = np.asarray(VT.T[:, :self.__d] @ Ds)
         self.__matrixDict = {"Us": Us, "Ut": Ut}
         self.__isEmbed = True
         return Us.T @ Ut

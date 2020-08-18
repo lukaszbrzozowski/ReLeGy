@@ -60,5 +60,5 @@ class LaplacianEmbeddings(Model):
                        method='SLSQP',
                        jac=flat(der),
                        constraints=eq_cons,
-                       options={'ftol': ftol, 'disp': verbose, 'maxiter': 200})
+                       options={'ftol': ftol, 'disp': verbose, 'maxiter': maxiter})
         return res.x.reshape(-1, self.__d)
