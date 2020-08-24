@@ -5,19 +5,21 @@ import numpy as np
 
 class LINE(Model):
 
-    def __init__(self, graph, **kwargs):
+    def __init__(self, graph, d=2, alpha1 = 1e-4, alpha2 = 1e-4, epochs = 400,
+                 batch_size = 30, lmbd1 = 1e-1, lmbd2 = 1e-2, verbose = False, **kwargs):
         super().__init__(graph.to_directed())
-        self.__A = kwargs["A"] if "A" in kwargs else adjacency_matrix(self.get_graph())
-        self.__d = kwargs["d"] if "d" in kwargs else 2
-        self.__alpha1 = kwargs["alpha1"] if "alpha1" in kwargs else 1e-4
-        self.__alpha2 = kwargs["alpha2"] if "alpha2" in kwargs else 1e-4
-        self.__epochs = kwargs["epochs"] if "epochs" in kwargs else 400
-        self.__batch_size = kwargs["batch_size"] if "batch_size" in kwargs else 30
-        self.__lmbd1 = kwargs["lmbd1"] if "lmbd1" in kwargs else 1e-1
-        self.__lmbd2 = kwargs["lmbd2"] if "lmbd2" in kwargs else 1e-1
+        self.__d = d
+        self.__alpha1 = alpha1
+        self.__alpha2 = alpha2
+        self.__epochs = epochs
+        self.__batch_size = batch_size
+        self.__lmbd1 = lmbd1
+        self.__lmbd2 = lmbd2
+        self.__verbose = verbose
+        self.__A = kwargs["A"] if "A" in kwargs else self.get_graph().to_numpy_array()
         self.__U1 = kwargs["U1"] if "U1" in kwargs else np.random.random((len(graph.nodes),self.__d))
         self.__U2 = kwargs["U2"] if "U2" in kwargs else np.random.random((len(graph.nodes),self.__d))
-        self.__model = None
+        self.__Z = None
 
     def embed(self):
         Frob = lambda U: np.linalg.norm(U)
@@ -41,9 +43,9 @@ class LINE(Model):
                     step2[i,:] += grad2(i,j) + self.__lmbd2*self.__U2[i,:]
                 self.__U1 -= self.__alpha1*step1
                 self.__U2 -= self.__alpha2*step2
-            print(f"Epoch: {iter+1}, 1st-order objective: {o1(graph):.2f}, 1st-order Frob:{Frob(self.__U1):.2f} 2nd-order objective: {o2(graph):.2f}, 2nd-order Frob:{Frob(self.__U2):.2f}", end="\r")
-        self.__model = np.c_[self.__U1, self.__U2]
-        return self.__model
+            if self.__verbose: print(f"Epoch: {iter+1}, 1st-order objective: {o1(graph):.2f}, 1st-order Frob:{Frob(self.__U1):.2f} 2nd-order objective: {o2(graph):.2f}, 2nd-order Frob:{Frob(self.__U2):.2f}", end="\r")
+        self.__Z = np.c_[self.__U1, self.__U2]
+        return self.__Z
 
     def info(self):
         pass

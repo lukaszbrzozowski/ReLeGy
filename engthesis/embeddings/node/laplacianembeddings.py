@@ -53,4 +53,4 @@ class LaplacianEmbeddings(Model):
                        jac=flat(der),
                        constraints=eq_cons,
                        options={'ftol': 1e-9, 'disp': True, 'maxiter': 200})
-        return res.x
+        return res.x.reshape(n, self.__d)
