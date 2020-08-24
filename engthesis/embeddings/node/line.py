@@ -1,7 +1,6 @@
-from networkx import adjacency_matrix
-
 from engthesis.model.base import Model
 import numpy as np
+import networkx as nx
 
 class LINE(Model):
 
@@ -16,7 +15,7 @@ class LINE(Model):
         self.__lmbd1 = lmbd1
         self.__lmbd2 = lmbd2
         self.__verbose = verbose
-        self.__A = kwargs["A"] if "A" in kwargs else self.get_graph().to_numpy_array()
+        self.__A = kwargs["A"] if "A" in kwargs else nx.to_numpy_array(self.get_graph())
         self.__U1 = kwargs["U1"] if "U1" in kwargs else np.random.random((len(graph.nodes),self.__d))
         self.__U2 = kwargs["U2"] if "U2" in kwargs else np.random.random((len(graph.nodes),self.__d))
         self.__Z = None

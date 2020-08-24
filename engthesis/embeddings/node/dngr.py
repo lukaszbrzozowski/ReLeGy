@@ -7,7 +7,7 @@ from engthesis.helpers.sdae import SDAE
 
 class DNGR(Model):
 
-    def __init__(self, graph, **kwargs):
+    def __init__(self, graph, d = 2, alpha = 0.9, T = 10):
         """
 
         :param graph: Graph to be embedded
@@ -19,10 +19,9 @@ class DNGR(Model):
 
         """
         super().__init__(graph)
-        parameters = kwargs
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__alpha = parameters["alpha"] if "alpha" in parameters else 0.9
-        self.__T = parameters["T"] if "T" in parameters else 10
+        self.__d: int = d
+        self.__alpha: float = alpha
+        self.__T: int = T
         self.__model = None
 
     def info(self) -> str:

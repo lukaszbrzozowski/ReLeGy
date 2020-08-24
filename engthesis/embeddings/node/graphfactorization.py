@@ -1,26 +1,20 @@
-from networkx import adjacency_matrix
+import networkx as nx
 import numpy as np
 from engthesis.model.base import Model
 from scipy.sparse import csr_matrix
 
 class GraphFactorization(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self, graph, d=2, eps=1e-7, lmbd=0) -> None:
         """
 
         :rtype: object
         """
-        __A: csr_matrix
-        __d: int
-        __eps: float
-        __lmbd: float
-
         super().__init__(graph)
-        parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph())
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__eps = parameters["eps"] if "eps" in parameters else 1e-7
-        self.__lmbd = parameters["lmbd"] if "lmbd" in parameters else 0
+        self.__A: csr_matrix = nx.to_numpy_array(self.get_graph())
+        self.__d: int = d
+        self.__eps: float = eps
+        self.__lmbd: float = lmbd
 
 
     def info(self) -> str:

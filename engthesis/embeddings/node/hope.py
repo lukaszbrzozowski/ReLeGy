@@ -6,26 +6,18 @@ from engthesis.model.base import Model
 
 class HOPE(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self, graph, proximity="Katz", d=2, param=0.1) -> None:
         """
 
         :rtype: object
         """
-        __A: matrix
-        __d: int
-        __proximity: str
-        __param: float
-        __matrixDict: dict
-        __isEmbed: bool
-
         super().__init__(graph)
-        parameters = kwargs
-        self.__A = to_numpy_matrix(self.get_graph())
-        self.__proximity = parameters["proximity"] if "proximity" in parameters else "Katz"
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__param = parameters["param"] if "param" in parameters else 0.1
-        self.__matrixDict = {}
-        self.__isEmbed = False
+        self.__A: matrix = to_numpy_matrix(self.get_graph())
+        self.__proximity: str = proximity
+        self.__d: int = d
+        self.__param: float = param
+        self.__matrixDict: dict = {}
+        self.__isEmbed: bool = False
 
     def info(self):
         return "To be implemented"

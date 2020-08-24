@@ -6,24 +6,17 @@ from networkx import to_numpy_matrix
 
 class GraRep(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self, graph, d=2, K=1, lmbd=1) -> None:
         """
 
         :rtype: object
         """
-        __A: matrix
-        __d: int
-        __K: int
-        __lmbd: float
-        __isEmbed: bool
-
         super().__init__(graph)
-        parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else to_numpy_matrix(self.get_graph())
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__K = parameters["K"] if "K" in parameters else 1
-        self.__lmbd = parameters["lmbd"] if "lmbd" in parameters else 1
-        self.__isEmbed = False
+        self.__A: matrix = to_numpy_matrix(self.get_graph())
+        self.__d: int = d
+        self.__K: int = K
+        self.__lmbd: float = lmbd
+        self.__isEmbed: bool = False
         self.__modelDict = {}
 
     def info(self) -> str:

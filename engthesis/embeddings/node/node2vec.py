@@ -1,6 +1,6 @@
 from typing import Any
 
-from networkx import to_numpy_matrix
+import networkx as nx
 import numpy as np
 from numpy import matrix, ndarray
 from gensim.models import Word2Vec
@@ -10,34 +10,25 @@ from engthesis.model.base import Model
 
 class Node2Vec(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self, graph, gamma=1, T=2, window=5, d=2, p=1, q=1) -> None:
         """
 
         :rtype: object
         """
-        __d: int
-        __T: int
-        __gamma: int
-        __window: int
-        __p: float
-        __q: float
         super().__init__(graph)
-        parameters = kwargs
-
-        self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
-        self.__T = parameters["T"] if "T" in parameters else 2
-        self.__window = parameters["window"] if "window" in parameters else 5
-        self.__d = parameters["d"] if "d" in parameters else 2
-
-        self.__p = parameters["p"] if "p" in parameters else 1
-        self.__q = parameters["q"] if "q" in parameters else 1
+        self.__gamma: int = gamma
+        self.__T: int = T
+        self.__window: int = window
+        self.__d: int = d
+        self.__p: float = p
+        self.__q: float = q
 
         self.__model = None
 
     def generate_random_walks(self) -> Any:
         G = self.get_graph()
         N: int = len(G.nodes)
-        A: matrix = to_numpy_matrix(G)
+        A: matrix = nx.to_numpy_matrix(G)
         p: float = self.__p
         q: float = self.__q
         random_walks: ndarray = np.empty((N * self.__gamma, self.__T))

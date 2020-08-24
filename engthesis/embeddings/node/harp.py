@@ -9,36 +9,26 @@ from six import iteritems
 
 
 class HARP(Model):
-    def __init__(self, graph, **kwargs):
-
-        __L: int
-        __threshold: int
-        __d: int
-        __method: str
-        __T: int
-        __gamma: int
-        __window: int
-        __verbose: bool
-        __p: float
-        __q: float
+    def __init__(self, graph, L=None, threshold=100, d=2, method="DeepWalk",
+                 T=2, gamma=1, window=5, p=1, q=1, verbose=False, **kwargs):
 
         super().__init__(graph)
         parameters = kwargs
-        self.__threshold = parameters["threshold"] if "threshold" in parameters else 100
-        self.__L = parameters["L"] if "L" in parameters else None
+        self.__threshold: int = threshold
+        self.__L: int = L
         if self.__L is not None:
             self.__threshold = None
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__method = parameters["method"] if "method" in parameters else "DeepWalk"
+        self.__d: int = d
+        self.__method: str = method
         assert (self.__method in ["DeepWalk", "Node2Vec", "LINE"])
 
-        self.__T = parameters["T"] if "T" in parameters else 2
-        self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
-        self.__window = parameters["window"] if "window" in parameters else 5
-        self.__verbose = parameters["verbose"] if "verbose" in parameters else True
+        self.__T: int = T
+        self.__gamma: int = gamma
+        self.__window: int = window
+        self.__verbose: bool = verbose
 
-        self.__p = parameters["p"] if "p" in parameters else 1
-        self.__q = parameters["q"] if "q" in parameters else 1
+        self.__p: float = p
+        self.__q: float = q
         self.__model = None
 
     @staticmethod

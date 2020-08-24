@@ -9,23 +9,18 @@ import copy
 
 class DeepWalk(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self, graph, d = 2, T = 2, gamma = 1, window = 5) -> None:
         """
 
         :rtype: object
         """
-        __d: int
-        __T: int
-        __gamma: int
-        __window: int
 
         super().__init__(graph)
         self.__model = None
-        parameters = kwargs
-        self.__d = parameters["d"] if "d" in parameters else 2
-        self.__T = parameters["T"] if "T" in parameters else 2
-        self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
-        self.__window = parameters["window"] if "window" in parameters else 5
+        self.__d: int = d
+        self.__T: int = T
+        self.__gamma: int = gamma
+        self.__window: int = window
 
     def generate_random_walks(self) -> list:
         G = self.get_graph()

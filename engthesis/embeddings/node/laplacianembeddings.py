@@ -1,6 +1,6 @@
 from typing import Dict, Any, Union, Callable
 
-from networkx import laplacian_matrix, adjacency_matrix
+from networkx import laplacian_matrix, to_numpy_matrix
 from scipy.optimize import minimize
 from scipy.sparse import csr_matrix
 
@@ -10,17 +10,14 @@ import numpy as np
 
 class LaplacianEmbeddings(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self, graph, d=2) -> None:
         """
 
         :rtype: object
         """
-        __A: csr_matrix
-        __d: int
         super().__init__(graph)
-        parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph())
-        self.__d = parameters["d"] if "d" in parameters else 2
+        self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
+        self.__d = d
 
     def info(self) -> str:
         return "To be implemented"
@@ -35,8 +32,8 @@ class LaplacianEmbeddings(Model):
             m -- output dimension
         """
         n = len(self.get_graph().nodes)
-        D = laplacian_matrix(self.get_graph()) + adjacency_matrix(self.get_graph())
-        L = D - self.__A
+        L = laplacian_matrix(self.get_graph())
+        D = L + self.__A
         Y0 = np.random.rand(n, self.__d).reshape(-1)
         Id = np.eye(self.__d)
         flat = lambda f: lambda Y_flat: f(Y_flat.reshape(n, self.__d)).reshape(-1)
