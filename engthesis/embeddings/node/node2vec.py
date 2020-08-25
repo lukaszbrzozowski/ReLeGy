@@ -1,6 +1,6 @@
 from typing import Any
 
-import networkx as nx
+from networkx import to_numpy_matrix, Graph
 import numpy as np
 from numpy import matrix, ndarray
 from gensim.models import Word2Vec
@@ -10,15 +10,28 @@ from engthesis.model.base import Model
 
 class Node2Vec(Model):
 
-    def __init__(self, graph, gamma=1, T=2, window=5, d=2, p=1, q=1) -> None:
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 T: int = 40,
+                 window_size: int = 5,
+                 gamma: int = 1,
+                 p: float = 1,
+                 q: float = 1) -> None:
         """
-
-        :rtype: object
+        The initialization method of the Node2Vec model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param T: Length of the random walks
+        :param gamma: Number of times a random walk is started from each vertex
+        :param window_size: Window size for the SkipGram model
+        :param p: Parameter of the biased random walks
+        :param q: Parameter of the biased random walks
         """
         super().__init__(graph)
         self.__gamma: int = gamma
         self.__T: int = T
-        self.__window: int = window
+        self.__window: int = window_size
         self.__d: int = d
         self.__p: float = p
         self.__q: float = q
@@ -28,7 +41,7 @@ class Node2Vec(Model):
     def generate_random_walks(self) -> Any:
         G = self.get_graph()
         N: int = len(G.nodes)
-        A: matrix = nx.to_numpy_matrix(G)
+        A: matrix = to_numpy_matrix(G)
         p: float = self.__p
         q: float = self.__q
         random_walks: ndarray = np.empty((N * self.__gamma, self.__T))
@@ -78,7 +91,7 @@ class Node2Vec(Model):
         :param alpha: Learning rate
         :param min_alpha: Minimal value of the learning rate; if defined, alpha decreases linearly
         :param negative: number of negative samples. If 0, no negative sampling is used
-        :return: ndarray
+        :return: Embedding of the graph into R^d
         """
         rw = self.generate_random_walks()
         self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,

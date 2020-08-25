@@ -6,3 +6,5 @@ G = nx.random_graphs.barabasi_albert_graph(1000, 2)
 harp = HARP(G, T=40, threshold=100)
 harp.embed()
 
+harp = HARP(G, )
+

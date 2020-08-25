@@ -1,17 +1,25 @@
-import networkx as nx
+from networkx import to_numpy_matrix, Graph
 import numpy as np
 from engthesis.model.base import Model
 from scipy.sparse import csr_matrix
 
 class GraphFactorization(Model):
 
-    def __init__(self, graph, d=2, eps=1e-7, lmbd=0) -> None:
+    def __init__(self, graph: Graph,
+                 d: int = 2,
+                 eps: float = 1e-7,
+                 lmbd: float = 0) -> None:
         """
-
-        :rtype: object
+        The initialization method of the Graph Factorization model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param similarity_matrix: Similarity matrix of the graph. Adjacency matrix of the graph is passed by default
+        :param eps: Threshold value of the change in optimisation process.
+        The algorithm stops when the difference between two reprezentations is less than eps
+        :param lmbd: Regularisation coefficient.
         """
         super().__init__(graph)
-        self.__A: csr_matrix = nx.to_numpy_array(self.get_graph())
+        self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
         self.__d: int = d
         self.__eps: float = eps
         self.__lmbd: float = lmbd

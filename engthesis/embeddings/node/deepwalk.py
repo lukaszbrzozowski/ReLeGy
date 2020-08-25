@@ -1,4 +1,4 @@
-from networkx import to_numpy_matrix
+from networkx import to_numpy_matrix, Graph
 import numpy as np
 from numpy import ndarray
 from gensim.models import Word2Vec
@@ -9,10 +9,19 @@ import copy
 
 class DeepWalk(Model):
 
-    def __init__(self, graph, d = 2, T = 2, gamma = 1, window = 5) -> None:
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 T: int = 40,
+                 gamma: int = 1,
+                 window_size: int = 5) -> None:
         """
-
-        :rtype: object
+        The initialization method of the DeepWalk model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param T: Length of the random walks.
+        :param gamma: Number of times a random walk is started from each vertex
+        :param window_size: Window size for the SkipGram model
         """
 
         super().__init__(graph)
@@ -20,7 +29,7 @@ class DeepWalk(Model):
         self.__d: int = d
         self.__T: int = T
         self.__gamma: int = gamma
-        self.__window: int = window
+        self.__window: int = window_size
 
     def generate_random_walks(self) -> list:
         G = self.get_graph()
@@ -52,7 +61,7 @@ class DeepWalk(Model):
         :param iter_num: Number of epochs
         :param alpha: Learning rate
         :param min_alpha: Minimal value of the learning rate; if defined, alpha decreases linearly
-        :return: ndarray
+        :return: Embedding of the graph into R^d
         """
         rw = self.generate_random_walks()
         self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,

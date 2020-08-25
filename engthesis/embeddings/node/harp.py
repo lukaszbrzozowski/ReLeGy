@@ -4,16 +4,42 @@ from engthesis.embeddings.node.node2vec import Node2Vec
 import numpy as np
 from numpy import ndarray
 import networkx as nx
+from networkx import Graph
 from gensim.models import Word2Vec
 from six import iteritems
 
 
 class HARP(Model):
-    def __init__(self, graph, L=None, threshold=100, d=2, method="DeepWalk",
-                 T=2, gamma=1, window=5, p=1, q=1, verbose=False, **kwargs):
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 method: str = "DeepWalk",
+                 threshold: int = 100,
+                 L: int = None,
+                 T: int = 40,
+                 window_size: int = 5,
+                 gamma: int = 1,
+                 p: float = 1,
+                 q: float = 1,
+                 verbose: bool = 1):
+        """
+        The initialization method of the HARP model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param method: The method to use in representation learning after the graph coarsening.
+        Possible are "DeepWalk", "Node2Vec" and #TODO add LINE to HARP
+        "LINE"
+        :param threshold: The maximal number of vertices of the coarsened graph. Not used if L is passed.
+        :param L: Number of iterations of the graph coarsening.
+        :param T: Length of the random walks (DeepWalk and Node2Vec)
+        :param gamma: Number of times a random walk is started from each vertex (DeepWalk and Node2Vec)
+        :param window_size: Window size for the SkipGram model (DeepWalk and Node2Vec)
+        :param p: Parameter of the biased random walks (Node2Vec)
+        :param q: Parameter of the biased random walks (Node2Vec)
+        :param verbose: Verbosity of the graph coarsening
+        """
 
         super().__init__(graph)
-        parameters = kwargs
         self.__threshold: int = threshold
         self.__L: int = L
         if self.__L is not None:
@@ -24,7 +50,7 @@ class HARP(Model):
 
         self.__T: int = T
         self.__gamma: int = gamma
-        self.__window: int = window
+        self.__window: int = window_size
         self.__verbose: bool = verbose
 
         self.__p: float = p
@@ -120,7 +146,7 @@ class HARP(Model):
                     print("Number of nodes: " + str(len(G.nodes)))
                     print("Number of edges: " + str(len(G.edges)))
                 if np.all(cln == cln[0]):
-                    print("The contraction stopped early - the graph was collapsed to a single node")
+                    print("The collapsion stopped early - the graph was collapsed to a single node")
                     break
             return graph_dict, transition_matrix
         i = 1
@@ -151,7 +177,6 @@ class HARP(Model):
         return weight_matrix
 
     def __generate_new_weights(self, weight_matrix, transition_matrix):
-        uqs = np.sort(np.unique(transition_matrix[:, 0]))
         sorter = np.argsort(weight_matrix[:, 0])
         permutation = sorter[np.searchsorted(weight_matrix[:, 0], transition_matrix[:, 1], sorter=sorter)]
         assert(np.all(weight_matrix[:, 0][permutation] == transition_matrix[:, 1]))
@@ -174,10 +199,10 @@ class HARP(Model):
         last_graph = graph_dict[graph_names[-1]]
         random_walks = None
         if self.__method == "DeepWalk":
-            dw = DeepWalk(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
+            dw = DeepWalk(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
             random_walks = dw.generate_random_walks()
         elif self.__method == "Node2Vec":
-            n2v = Node2Vec(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window,
+            n2v = Node2Vec(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
                            p=self.__p, q=self.__q)
             random_walks = n2v.generate_random_walks()
         assert(random_walks is not None)
@@ -192,13 +217,12 @@ class HARP(Model):
 
         for i in np.arange(len(graph_names)-2, -1, -1):
             cur_graph = graph_dict[graph_names[i]]
-            dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
 
             if self.__method == "DeepWalk":
-                dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window)
+                dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
                 random_walks = dw.generate_random_walks()
             elif self.__method == "Node2Vec":
-                n2v = Node2Vec(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window=self.__window,
+                n2v = Node2Vec(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
                                p=self.__p, q=self.__q)
                 random_walks = n2v.generate_random_walks()
 
@@ -208,7 +232,8 @@ class HARP(Model):
             self.__model.build_vocab(sentences=random_walks)
             self.__update_model_weights(new_wm)
 
-            self.__model.train(sentences=random_walks, total_examples=len(random_walks), total_words=len(cur_graph.nodes),
+            self.__model.train(sentences=random_walks, total_examples=len(random_walks),
+                               total_words=len(cur_graph.nodes),
                                epochs=iter_num)
             if i > 0:
                 weight_matrix = self.__get_weights_from_model()
