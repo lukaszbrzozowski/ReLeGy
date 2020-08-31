@@ -76,6 +76,7 @@ class HARP(Model):
                 pairs = pairs[:-1]
             stacked_pairs = np.vstack(pairs)
             convert_list[stacked_pairs[:, 0], 1] = stacked_pairs[:, 1]
+        convert_list = convert_list
         return convert_list
 
     @staticmethod
@@ -131,28 +132,27 @@ class HARP(Model):
         cl = np.array([np.arange(len(G.nodes)), cl_edge[:, 1][cl_star[:, 1].astype(int)]]).T
         return nG_edge, cl
 
-    def generate_collapsed_graphs(self):
-        G = self.get_graph()
-        transition_matrix = np.arange(len(G.nodes)).reshape(-1, 1)
-        graph_dict = {"G0": G}
+    def __generate_with_L(self, G, graph_stack, transition_matrix):
         if self.__L is not None:
             for i in range(self.__L):
                 G, cl = self.edge_star_collapse(G)
-                graph_dict["G"+str(i+1)] = G
+                graph_stack.append(G)
                 cln = cl[:, 1][transition_matrix[:, -1].astype(int)].reshape(-1, 1)
                 transition_matrix = np.concatenate([transition_matrix, cln], axis=1)
                 if self.__verbose:
-                    print("Collapsed graph nr " + str(i+1))
+                    print("Collapsed graph nr " + str(i + 1))
                     print("Number of nodes: " + str(len(G.nodes)))
                     print("Number of edges: " + str(len(G.edges)))
                 if np.all(cln == cln[0]):
                     print("The collapsion stopped early - the graph was collapsed to a single node")
                     break
-            return graph_dict, transition_matrix
+            return graph_stack, transition_matrix
+
+    def __generate_with_threshold(self, G, graph_stack, transition_matrix):
         i = 1
         while len(G.nodes) > self.__threshold:
             G, cl = self.edge_star_collapse(G)
-            graph_dict["G" + str(i)] = G
+            graph_stack.append(G)
             i += 1
             cln = cl[:, 1][transition_matrix[:, -1].astype(int)].reshape(-1, 1)
             transition_matrix = np.concatenate([transition_matrix, cln], axis=1)
@@ -160,10 +160,32 @@ class HARP(Model):
                 print("Collapsed graph nr " + str(i - 1))
                 print("Number of nodes: " + str(len(G.nodes)))
                 print("Number of edges: " + str(len(G.edges)))
-        return graph_dict, transition_matrix
+        return graph_stack, transition_matrix
+
+    def generate_collapsed_graphs(self):
+        G = self.get_graph()
+        transition_matrix = np.arange(len(G.nodes)).reshape(-1, 1)
+        graph_stack = [G]
+
+        # L is not None, threshold is None
+        if self.__L is not None:
+            return self.__generate_with_L(G, graph_stack, transition_matrix)
+        elif self.__threshold is not None:
+            return self.__generate_with_threshold(G, graph_stack, transition_matrix)
+        else:
+            raise ValueError("None of the number of graphs L or node number threshold were specified")
 
     def info(self) -> str:
         return "TBI"
+
+    def __generate_random_walks(self, G):
+        if self.__method == "DeepWalk":
+            dw = DeepWalk(G, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
+            random_walks = dw.generate_random_walks()
+        elif self.__method == "Node2Vec":
+            n2v = Node2Vec(G, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
+                           p=self.__p, q=self.__q)
+            random_walks = n2v.generate_random_walks()
 
     def __get_weights_from_model(self):
         wv = self.__model.wv
@@ -194,48 +216,43 @@ class HARP(Model):
             wv.syn0[wv.vocab[word].index] = row[1:]
 
     def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01) -> ndarray:
-        graph_dict, transition_matrix = self.generate_collapsed_graphs()
-        graph_names = sorted(graph_dict.keys())
-        last_graph = graph_dict[graph_names[-1]]
-        random_walks = None
-        if self.__method == "DeepWalk":
-            dw = DeepWalk(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
-            random_walks = dw.generate_random_walks()
-        elif self.__method == "Node2Vec":
-            n2v = Node2Vec(last_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
-                           p=self.__p, q=self.__q)
-            random_walks = n2v.generate_random_walks()
+        graph_stack, transition_matrix = self.generate_collapsed_graphs()
+
+        last_graph = graph_stack.pop() # We treat the last created graph separately, because we don't update the weights
+
+        random_walks = self.__generate_random_walks(last_graph)
         assert(random_walks is not None)
-        self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
-                                min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=0)
+
+        self.__model = Word2Vec(alpha=alpha,
+                                min_alpha=min_alpha,
+                                min_count=0,
+                                size=self.__d,
+                                window=self.__window,
+                                sg=1,
+                                hs=1,
+                                negative=0)
         self.__model.build_vocab(sentences=random_walks)
-        self.__model.train(sentences=random_walks, total_examples=len(random_walks), total_words=len(last_graph.nodes),
+        self.__model.train(sentences=random_walks,
+                           total_examples=len(random_walks),
+                           total_words=len(last_graph.nodes),
                            epochs=iter_num)
+
         weight_matrix = self.__get_weights_from_model()
         tr_matrix = transition_matrix[:, -2:]
         new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
-        for i in np.arange(len(graph_names)-2, -1, -1):
-            cur_graph = graph_dict[graph_names[i]]
+        for i, cur_graph in reversed(enumerate(graph_stack)):
 
-            if self.__method == "DeepWalk":
-                dw = DeepWalk(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
-                random_walks = dw.generate_random_walks()
-            elif self.__method == "Node2Vec":
-                n2v = Node2Vec(cur_graph, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
-                               p=self.__p, q=self.__q)
-                random_walks = n2v.generate_random_walks()
+            random_walks = self.__generate_random_walks(cur_graph)
 
             self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
                                     min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=0)
-
             self.__model.build_vocab(sentences=random_walks)
             self.__update_model_weights(new_wm)
-
             self.__model.train(sentences=random_walks, total_examples=len(random_walks),
                                total_words=len(cur_graph.nodes),
                                epochs=iter_num)
-            if i > 0:
+            if i > 0: # We don't need to update matrices after the last graph iteration
                 weight_matrix = self.__get_weights_from_model()
                 tr_matrix = transition_matrix[:, (i-1):(i+1)]
                 new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
