@@ -76,7 +76,6 @@ class HARP(Model):
                 pairs = pairs[:-1]
             stacked_pairs = np.vstack(pairs)
             convert_list[stacked_pairs[:, 0], 1] = stacked_pairs[:, 1]
-        convert_list = convert_list
         return convert_list
 
     @staticmethod
