@@ -153,7 +153,8 @@ class HARP(Model):
         wv = self.__model.wv
         weight_matrix = np.empty((len(wv.vocab.keys()), self.__d+1))
         i = 0
-        for word, vocab in sorted(iteritems(wv.vocab)):
+        temp_vocab = {int(k): v for k, v in wv.vocab.items()}
+        for word, vocab in sorted(iteritems(temp_vocab)):
             row = wv.syn0[vocab.index]
             weight_matrix[i, 0] = word
             weight_matrix[i, 1:] = row
@@ -225,4 +226,4 @@ class HARP(Model):
                 tr_matrix = transition_matrix[:, (i-1):(i+1)]
                 new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
-        return self.__model.wv.vectors
+        return self.__get_weights_from_model()

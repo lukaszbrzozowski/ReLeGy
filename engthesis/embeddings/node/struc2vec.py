@@ -4,8 +4,10 @@ from networkx import Graph, diameter, floyd_warshall_numpy
 from numpy import ndarray
 from fastdtw import fastdtw
 from gensim.models import Word2Vec
+from six import iteritems
 
-class Struct2Vec(Model):
+
+class Struc2Vec(Model):
 
     def __init__(self,
                  graph: Graph,
@@ -35,13 +37,14 @@ class Struct2Vec(Model):
         N = len(self.get_graph().nodes)
         deg_seq = np.array(self.get_graph().degree(np.arange(N)))[:, 1].reshape(N, -1)
         k_max = self.__k
-        dist_matrix = floyd_warshall_numpy(self.get_graph())
+        dist_matrix = floyd_warshall_numpy(self.get_graph(), nodelist=np.sort(self.get_graph().nodes))
         f_cur = np.zeros((N, N))
         matrix_dict = {}
         for k in np.arange(k_max+1):
             for u in np.arange(N):
+
+                mask_u = (dist_matrix[u, :] == k).reshape(N, -1)
                 for v in np.arange(N):
-                    mask_u = (dist_matrix[u, :] == k).reshape(N, -1)
                     mask_v = (dist_matrix[v, :] == k).reshape(N, -1)
                     if np.any(mask_u) and np.any(mask_v):
                         deg_u = deg_seq[mask_u]
@@ -56,11 +59,9 @@ class Struct2Vec(Model):
     @staticmethod
     def generate_multigraph_edges(matrix_dict):
         n_layers = len(matrix_dict)
-        weights_in_layers_with_nan = {"W" + str(i): np.exp(-matrix_dict["F"+str(i)]) for i in range(n_layers)}
-        avg_weights = [np.nanmean(weights_in_layers_with_nan["W" + str(i)]) for i in range(n_layers)]
-        masks = [np.logical_not(np.isnan(weights_in_layers_with_nan["W"+str(i)])) for i in range(n_layers)]
-        gammas = [np.mean(weights_in_layers_with_nan["W" + str(i)][masks[i]] > avg_weights[i]) for i in range(n_layers)]
-        weights_in_layers = {"W" + str(i): np.nan_to_num(weights_in_layers_with_nan["W" + str(i)]) for i in range(n_layers)}
+        weights_in_layers = {"W" + str(i): np.nan_to_num(np.exp(-matrix_dict["F"+str(i)])) for i in range(n_layers)}
+        avg_weights = [np.mean(weights_in_layers["W" + str(i)]) for i in range(n_layers)]
+        gammas = [np.mean(weights_in_layers["W" + str(i)] > avg_weights[i], axis=1) for i in range(n_layers)]
         weights_forward = [np.log(gammas[i]+np.e) for i in range(n_layers-1)]
         return weights_in_layers, weights_forward
 
@@ -88,36 +89,41 @@ class Struct2Vec(Model):
                 rw_length = 1
                 cur_layer = 0
                 cur_v = j
-                while rw_length <= self.__T:
+                while rw_length < self.__T:
                     if np.random.random() > self.__q:
                         if cur_layer == 0:
                             cur_layer = 1
-                            cur_w = Z[cur_layer]
-                            if np.any(np.isnan(cur_w[cur_v, :])):
-                                cur_layer = 0
                         elif cur_layer == self.__k:
                             cur_layer = self.__k-1
-                            cur_w = Z[cur_layer]
-                            if np.any(np.isnan(cur_w[cur_v, :])):
-                                cur_layer = self.__k
                         else:
-                            p = w_f[cur_layer]/(w_f[cur_layer]+1)
-                            if np.random.random() > p:
+                            p = w_f[cur_layer][cur_v]/(w_f[cur_layer][cur_v]+1)
+                            change_lay = True
+                            if np.random.random() < p:
                                 cur_layer += 1
-                                cur_w = Z[cur_layer]
-                                if np.any(np.isnan(cur_w[cur_v, :])):
+                                if np.all(w_in["W"+str(cur_layer)][cur_v, :] == 0):
                                     cur_layer -= 1
+                                    change_lay = False
                             else:
-                                cur_layer -= 1
-                                cur_w = Z[cur_layer]
-                                if np.any(np.isnan(cur_w[cur_v, :])):
-                                    cur_layer += 1
+                                if change_lay:
+                                    cur_layer -= 1
                     cur_w = Z[cur_layer]
                     next_v = np.random.choice(np.arange(N), p=cur_w[cur_v, :])
-                    random_walks[(i*N)+j, rw_length-1] = next_v
+                    random_walks[(i*N)+j, rw_length] = next_v
                     cur_v = next_v
                     rw_length += 1
         return random_walks.astype(int).astype(str).tolist()
+
+    def __get_weights_from_model(self):
+        wv = self.__model.wv
+        weight_matrix = np.empty((len(wv.vocab.keys()), self.__d+1))
+        i = 0
+        temp_vocab = {int(k): v for k, v in wv.vocab.items()}
+        for word, vocab in sorted(iteritems(temp_vocab)):
+            row = wv.syn0[vocab.index]
+            weight_matrix[i, 0] = word
+            weight_matrix[i, 1:] = row
+            i += 1
+        return weight_matrix
 
     def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01) -> ndarray:
         matrix_dict = self.generate_similarity_matrices()
@@ -128,4 +134,4 @@ class Struct2Vec(Model):
         self.__model.build_vocab(sentences=rw)
         self.__model.train(sentences=rw, total_examples=len(rw), total_words=len(self.get_graph().nodes),
                            epochs=iter_num)
-        return self.__model.wv.vectors
+        return self.__get_weights_from_model()
