@@ -26,7 +26,8 @@ class GraphWave(Model):
         self.__J = J
         self.__eta = eta
         self.__gamma = gamma
-        self.__L = laplacian_matrix(graph).toarray()
+        self.__L = laplacian_matrix(graph, nodelist=np.arange(len(graph.nodes))).toarray()
+        print(self.__L)
         self.__kernel = kernel
         self.__i_start = interval_start
         self.__i_stop = interval_stop
@@ -39,12 +40,12 @@ class GraphWave(Model):
             s = self.calculate_s(u)
             thetas = [None] * len(s)
             for i in range(len(s)):
-                thetas[i] = v @ self.__kernel(np.diag(u), s[i]) @ v.T
+                thetas[i] = v @ np.diag(self.__kernel(u, s[i])) @ v.T
+        print(thetas[0])
         return thetas
 
     def calculate_s(self, u):
         su = np.sort(u)
-        print(su)
         geometric_mean = np.sqrt(su[1] * su[-1])
         s_max = -np.log(self.__eta) * geometric_mean
         s_min = -np.log(self.__gamma) * geometric_mean
