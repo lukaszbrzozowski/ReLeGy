@@ -178,6 +178,7 @@ class HARP(Model):
         return "TBI"
 
     def __generate_random_walks(self, G):
+        random_walks = None
         if self.__method == "DeepWalk":
             dw = DeepWalk(G, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
             random_walks = dw.generate_random_walks()
@@ -189,9 +190,10 @@ class HARP(Model):
 
     def __get_weights_from_model(self):
         wv = self.__model.wv
-        weight_matrix = np.empty((len(wv.vocab.keys()), self.__d+1))
+        weight_matrix = np.empty((len(wv.vocab.keys()), self.__d + 1))
         i = 0
-        for word, vocab in sorted(iteritems(wv.vocab)):
+        temp_vocab = {int(k): v for k, v in wv.vocab.items()}
+        for word, vocab in sorted(iteritems(temp_vocab)):
             row = wv.syn0[vocab.index]
             weight_matrix[i, 0] = word
             weight_matrix[i, 1:] = row
@@ -201,8 +203,8 @@ class HARP(Model):
     def __generate_new_weights(self, weight_matrix, transition_matrix):
         sorter = np.argsort(weight_matrix[:, 0])
         permutation = sorter[np.searchsorted(weight_matrix[:, 0], transition_matrix[:, 1], sorter=sorter)]
-        assert(np.all(weight_matrix[:, 0][permutation] == transition_matrix[:, 1]))
-        new_weight_matrix = np.empty((transition_matrix.shape[0], self.__d+1))
+        assert (np.all(weight_matrix[:, 0][permutation] == transition_matrix[:, 1]))
+        new_weight_matrix = np.empty((transition_matrix.shape[0], self.__d + 1))
         new_weight_matrix[:, 0] = transition_matrix[:, 0].astype(int)
         new_weight_matrix[:, 1:] = weight_matrix[permutation, 1:]
         sorted_new_weight_matrix = np.unique(new_weight_matrix, axis=0)
@@ -212,16 +214,17 @@ class HARP(Model):
         wv = self.__model.wv
         for row in weight_matrix:
             word = str(int(row[0]))
-            assert(word in wv.vocab)
+            assert (word in wv.vocab)
             wv.syn0[wv.vocab[word].index] = row[1:]
 
     def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01) -> ndarray:
         graph_stack, transition_matrix = self.generate_collapsed_graphs()
 
-        last_graph = graph_stack.pop() # We treat the last created graph separately, because we don't update the weights
+        last_graph = graph_stack.pop()  # We treat the last created graph separately,
+        # because we don't update the weights
 
         random_walks = self.__generate_random_walks(last_graph)
-        assert(random_walks is not None)
+        assert (random_walks is not None)
 
         self.__model = Word2Vec(alpha=alpha,
                                 min_alpha=min_alpha,
@@ -252,9 +255,9 @@ class HARP(Model):
             self.__model.train(sentences=random_walks, total_examples=len(random_walks),
                                total_words=len(cur_graph.nodes),
                                epochs=iter_num)
-            if i > 0: # We don't need to update matrices after the last graph iteration
+            if i > 0:  # We don't need to update matrices after the last graph iteration
                 weight_matrix = self.__get_weights_from_model()
-                tr_matrix = transition_matrix[:, (i-1):(i+1)]
+                tr_matrix = transition_matrix[:, (i - 1):(i + 1)]
                 new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
-        return self.__model.wv.vectors
+        return self.__get_weights_from_model()
