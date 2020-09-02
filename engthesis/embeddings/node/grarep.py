@@ -19,11 +19,13 @@ class GraRep(Model):
         :param lmbd: Regularisation coefficient.
         """
         super().__init__(graph)
+
         self.__A: matrix = to_numpy_matrix(self.get_graph())
         self.__d: int = d
         self.__K: int = K
         self.__lmbd: float = lmbd
         self.__isEmbed: bool = False
+
         self.__modelDict = {}
 
     def info(self) -> str:

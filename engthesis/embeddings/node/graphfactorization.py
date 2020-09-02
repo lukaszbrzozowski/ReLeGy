@@ -19,6 +19,7 @@ class GraphFactorization(Model):
         :param lmbd: Regularisation coefficient.
         """
         super().__init__(graph)
+
         self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
         self.__d: int = d
         self.__eps: float = eps

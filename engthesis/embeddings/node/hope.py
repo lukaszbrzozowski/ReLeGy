@@ -20,12 +20,14 @@ class HOPE(Model):
         Ignored otherwise
         """
         super().__init__(graph)
+
         self.__A: matrix = to_numpy_matrix(self.get_graph())
         self.__proximity: str = proximity
         self.__d: int = d
         self.__param: float = parameter
         self.__matrixDict: dict = {}
         self.__isEmbed: bool = False
+
 
     def info(self):
         return "To be implemented"
@@ -62,7 +64,7 @@ class HOPE(Model):
         self.__isEmbed = True
         return Us.T @ Ut
 
-    def getMatrixDict(self) -> dict:
+    def get_matrix_dict(self) -> dict:
         if not self.__isEmbed:
             print("The graph has not been embedded yet")
         return self.__matrixDict

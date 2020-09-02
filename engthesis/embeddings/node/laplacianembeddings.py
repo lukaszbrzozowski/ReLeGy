@@ -20,8 +20,10 @@ class LaplacianEmbeddings(Model):
         :param similarity_matrix: Similarity matrix of the graph. Adjacency matrix of the graph is passed by default
         """
         super().__init__(graph)
+
         self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
         self.__d = d
+
 
     def info(self) -> str:
         return "To be implemented"
@@ -39,8 +41,10 @@ class LaplacianEmbeddings(Model):
         """
 
         n = len(self.get_graph().nodes)
+
         L = laplacian_matrix(self.get_graph())
         D = L + self.__A
+
         Y0 = np.random.rand(n, self.__d).reshape(-1)
         Id = np.eye(self.__d)
         flat = lambda f: lambda Y_flat: f(Y_flat.reshape(n, self.__d)).reshape(-1)

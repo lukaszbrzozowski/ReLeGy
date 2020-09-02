@@ -41,7 +41,7 @@ class Node2Vec(Model):
     def generate_random_walks(self) -> Any:
         G = self.get_graph()
         N: int = len(G.nodes)
-        A: matrix = to_numpy_matrix(G)
+        A: matrix = to_numpy_matrix(G, np.arange(len(G.nodes)))
         p: float = self.__p
         q: float = self.__q
         random_walks: ndarray = np.empty((N * self.__gamma, self.__T))
