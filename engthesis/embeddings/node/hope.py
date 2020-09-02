@@ -20,7 +20,7 @@ class HOPE(Model):
 
         super().__init__(graph)
         parameters = kwargs
-        self.__A = to_numpy_matrix(self.get_graph())
+        self.__A = to_numpy_matrix(self.get_graph(), nodelist=np.arange(len(graph.nodes)))
         self.__proximity = parameters["proximity"] if "proximity" in parameters else "Katz"
         self.__d = parameters["d"] if "d" in parameters else 2
         self.__param = parameters["param"] if "param" in parameters else 0.1
@@ -60,7 +60,7 @@ class HOPE(Model):
         self.__isEmbed = True
         return Us.T @ Ut
 
-    def getMatrixDict(self) -> dict:
+    def get_matrix_dict(self) -> dict:
         if not self.__isEmbed:
             print("The graph has not been embedded yet")
         return self.__matrixDict

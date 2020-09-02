@@ -18,11 +18,10 @@ for node in bg:
         color_map.append("yellow")
 nx.draw(bg, with_labels=True, node_color=color_map)
 plt.show()
-s2v = Struc2Vec(bg, d=5, gamma=20, T=5)
+s2v = Struc2Vec(bg, d=10, gamma=20, T=5, OPT3_k=3)
 
 F = s2v.generate_similarity_matrices()
-Z = s2v.embed()
-print(Z[:, 0])
+Z = s2v.embed(iter_num=3000)
 pca_ = PCA(n_components=5, svd_solver="full")
 pca = pca_.fit_transform(StandardScaler().fit_transform(Z[:, 1:]))
 plt.scatter(pca[:, 0], pca[:, 1], c=color_map)

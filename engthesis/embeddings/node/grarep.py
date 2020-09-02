@@ -19,7 +19,8 @@ class GraRep(Model):
 
         super().__init__(graph)
         parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else to_numpy_matrix(self.get_graph())
+        self.__A = parameters["A"] if "A" in parameters else to_numpy_matrix(graph,
+                                                                             nodelist=np.arange(len(self.get_graph().nodes)))
         self.__d = parameters["d"] if "d" in parameters else 2
         self.__K = parameters["K"] if "K" in parameters else 1
         self.__lmbd = parameters["lmbd"] if "lmbd" in parameters else 1

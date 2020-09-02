@@ -19,7 +19,8 @@ class LaplacianEmbeddings(Model):
         __d: int
         super().__init__(graph)
         parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph())
+        self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph(),
+                                                                              nodelist=np.arange(len(self.get_graph().nodes)))
         self.__d = parameters["d"] if "d" in parameters else 2
 
     def info(self) -> str:
@@ -35,7 +36,9 @@ class LaplacianEmbeddings(Model):
             m -- output dimension
         """
         n = len(self.get_graph().nodes)
-        D = laplacian_matrix(self.get_graph()) + adjacency_matrix(self.get_graph())
+        node_list = np.arange(len(self.get_graph().nodes))
+        D = laplacian_matrix(self.get_graph(), nodelist=node_list) + adjacency_matrix(self.get_graph(),
+                                                                                      nodelist=node_list)
         L = D - self.__A
         Y0 = np.random.rand(n, self.__d).reshape(-1)
         Id = np.eye(self.__d)

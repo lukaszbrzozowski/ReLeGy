@@ -17,11 +17,11 @@ class GraphFactorization(Model):
 
         super().__init__(graph)
         parameters = kwargs
-        self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph())
+        self.__A = parameters["A"] if "A" in parameters else adjacency_matrix(self.get_graph(),
+                                                                              nodelist=np.arange(len(self.get_graph().nodes)))
         self.__d = parameters["d"] if "d" in parameters else 2
         self.__eps = parameters["eps"] if "eps" in parameters else 1e-7
         self.__lmbd = parameters["lmbd"] if "lmbd" in parameters else 0
-
 
     def info(self) -> str:
         return "To be implemented"

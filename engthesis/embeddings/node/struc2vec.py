@@ -15,7 +15,9 @@ class Struc2Vec(Model):
                  q: float = 0.3,
                  T: int = 40,
                  gamma: int = 1,
-                 window_size: int = 5):
+                 window_size: int = 5,
+                 OPT1: bool = False,
+                 OPT3_k: int = None):
         """
 
         :param graph:
@@ -31,7 +33,12 @@ class Struc2Vec(Model):
         self.__window = window_size
         self.__q = q
         self.__k = diameter(self.get_graph())
+        if OPT3_k is not None:
+            assert(OPT3_k < self.__k)
+            self.__k = OPT3_k
         self.__model = None
+        self.__OPT1 = OPT1
+        #TODO OPT2
 
     def generate_similarity_matrices(self):
         N = len(self.get_graph().nodes)
@@ -42,19 +49,45 @@ class Struc2Vec(Model):
         matrix_dict = {}
         for k in np.arange(k_max+1):
             for u in np.arange(N):
-
                 mask_u = (dist_matrix[u, :] == k).reshape(N, -1)
-                for v in np.arange(N):
-                    mask_v = (dist_matrix[v, :] == k).reshape(N, -1)
-                    if np.any(mask_u) and np.any(mask_v):
-                        deg_u = deg_seq[mask_u]
-                        deg_v = deg_seq[mask_v]
-                        dist = self.__compare_deg_seq(deg_u, deg_v)
-                        f_cur[u, v] += dist
-                    else:
-                        f_cur[u, v] = None
+                if np.any(mask_u):
+                    for v in np.arange(N):
+                        mask_v = (dist_matrix[v, :] == k).reshape(N, -1)
+                        if np.any(mask_v):
+                            deg_u = deg_seq[mask_u]
+                            deg_v = deg_seq[mask_v]
+                            if self.__OPT1:
+                                dist = self.__compare_deg_seq_opt1(deg_u, deg_v)
+                            else:
+                                dist = self.__compare_deg_seq(deg_u, deg_v)
+                            f_cur[u, v] += dist
+                        else:
+                            f_cur[u, v] = None
+                else:
+                    f_cur[u, :] = None
             matrix_dict["F" + str(k)] = np.copy(f_cur)
         return matrix_dict
+
+    @staticmethod
+    def dist_fun(a, b):
+        return (max(a[0], b[0]) / min(a[0], b[0]) - 1)*max(a[1], b[1])
+
+    def __compare_deg_seq_opt1(self, deg_u, deg_v):
+        uq1, cn1 = np.unique(deg_u, return_counts=True)
+        uq2, cn2 = np.unique(deg_v, return_counts=True)
+        a1 = dict(zip(uq1, cn1))
+        a2 = dict(zip(uq2, cn2))
+        counts_u = np.zeros((max(a1.keys()), 2))
+        counts_v = np.zeros((max(a2.keys()), 2))
+        counts_u[:, 0] = np.arange(1, counts_u.shape[0]+1)
+        counts_v[:, 0] = np.arange(1, counts_v.shape[0]+1)
+        for i in a1.keys():
+            counts_u[i-1, 1] = a1[i]
+        for i in a2.keys():
+            counts_v[i-1, 1] = a2[i]
+        dist, _ = fastdtw(counts_u, counts_v, dist=lambda a, b: self.dist_fun(a, b))
+        return dist
+
 
     @staticmethod
     def generate_multigraph_edges(matrix_dict):

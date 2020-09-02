@@ -29,7 +29,7 @@ class DNGR(Model):
         return "TBI"
 
     def __random_surf(self) -> ndarray:
-        A = to_numpy_array(self.get_graph())
+        A = to_numpy_array(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
         scaled_A = self.__scale_sim_mat(A)
         P0 = np.identity(A.shape[0])
         P = P0

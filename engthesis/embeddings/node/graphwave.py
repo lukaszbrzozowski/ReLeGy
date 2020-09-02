@@ -41,7 +41,6 @@ class GraphWave(Model):
             thetas = [None] * len(s)
             for i in range(len(s)):
                 thetas[i] = v @ np.diag(self.__kernel(u, s[i])) @ v.T
-        print(thetas[0])
         return thetas
 
     def calculate_s(self, u):
@@ -67,7 +66,7 @@ class GraphWave(Model):
         for iter_j in range(self.__J):
             for i in range(t.shape[0]):
                 cur_t = t[i]
-                phi = np.mean(np.exp(1j * cur_t * theta[iter_j]), axis=1)
+                phi = np.mean(np.exp(1j * cur_t * theta[iter_j]), axis=0)
                 Z[:, 2*iter_j*self.__d+2*i] = np.real(phi)
                 Z[:, 2*iter_j*self.__d+2*i+1] = np.imag(phi)
         return Z

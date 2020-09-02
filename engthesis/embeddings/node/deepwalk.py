@@ -32,7 +32,7 @@ class DeepWalk(Model):
     def generate_random_walks(self) -> list:
         G = self.get_graph()
         N = len(G.nodes)
-        A = to_numpy_matrix(G)
+        A = to_numpy_matrix(G, nodelist=np.arange(len(G.nodes)))
         # P - 1-step transition probability matrix
         baseP = np.diag(1 / np.sum(A, axis=1).A1) @ A
         random_walks = np.empty((N*self.__gamma, self.__T))
