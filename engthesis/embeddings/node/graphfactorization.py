@@ -20,7 +20,7 @@ class GraphFactorization(Model):
         """
         super().__init__(graph)
 
-        self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
+        self.__A: csr_matrix = to_numpy_matrix(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
         self.__d: int = d
         self.__eps: float = eps
         self.__lmbd: float = lmbd

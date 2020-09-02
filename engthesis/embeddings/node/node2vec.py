@@ -6,6 +6,7 @@ from numpy import matrix, ndarray
 from gensim.models import Word2Vec
 
 from engthesis.model.base import Model
+from six import iteritems
 
 
 class Node2Vec(Model):
@@ -84,6 +85,18 @@ class Node2Vec(Model):
     def info(self) -> str:
         return "TBI"
 
+    def __get_weights_from_model(self):
+        wv = self.__model.wv
+        weight_matrix = np.empty((len(wv.vocab.keys()), self.__d+1))
+        i = 0
+        temp_vocab = {int(k): v for k, v in wv.vocab.items()}
+        for word, vocab in sorted(iteritems(temp_vocab)):
+            row = wv.syn0[vocab.index]
+            weight_matrix[i, 0] = word
+            weight_matrix[i, 1:] = row
+            i += 1
+        return weight_matrix
+
     def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01, negative=5) -> ndarray:
         """
         The main embedding function of the node2vec model
@@ -99,8 +112,5 @@ class Node2Vec(Model):
         self.__model.build_vocab(sentences=rw)
         self.__model.train(sentences=rw, total_examples=len(rw), total_words=len(self.get_graph().nodes),
                            epochs=iter_num)
-        wv = self.__model.wv
-        Z = np.empty((len(rw) // self.__gamma, self.__d))
-        for i in range(Z.shape[0]):
-            Z[i, :] = wv[str(i)]
-        return Z
+
+        return self.__get_weights_from_model()

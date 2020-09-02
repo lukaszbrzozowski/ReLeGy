@@ -21,7 +21,7 @@ class HOPE(Model):
         """
         super().__init__(graph)
 
-        self.__A: matrix = to_numpy_matrix(self.get_graph())
+        self.__A: matrix = to_numpy_matrix(self.get_graph(), nodelist=np.arange(graph.nodes))
         self.__proximity: str = proximity
         self.__d: int = d
         self.__param: float = parameter

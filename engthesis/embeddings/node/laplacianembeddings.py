@@ -21,7 +21,7 @@ class LaplacianEmbeddings(Model):
         """
         super().__init__(graph)
 
-        self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
+        self.__A: csr_matrix = to_numpy_matrix(self.get_graph(), nodelist=np.arange(graph.nodes))
         self.__d = d
 
 
@@ -42,7 +42,7 @@ class LaplacianEmbeddings(Model):
 
         n = len(self.get_graph().nodes)
 
-        L = laplacian_matrix(self.get_graph())
+        L = laplacian_matrix(self.get_graph(), nodelist=np.arange(n))
         D = L + self.__A
 
         Y0 = np.random.rand(n, self.__d).reshape(-1)

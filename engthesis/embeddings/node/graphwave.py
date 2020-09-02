@@ -27,7 +27,6 @@ class GraphWave(Model):
         self.__eta = eta
         self.__gamma = gamma
         self.__L = laplacian_matrix(graph, nodelist=np.arange(len(graph.nodes))).toarray()
-        print(self.__L)
         self.__kernel = kernel
         self.__i_start = interval_start
         self.__i_stop = interval_stop
@@ -52,7 +51,6 @@ class GraphWave(Model):
             s = [(s_min + s_max) / 2]
         else:
             s = np.linspace(s_min, s_max, self.__J)
-        print(s)
         return s
 
     def info(self) -> str:

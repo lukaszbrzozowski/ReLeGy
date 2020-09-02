@@ -15,9 +15,10 @@ class LINE(Model):
         self.__lmbd1 = lmbd1
         self.__lmbd2 = lmbd2
         self.__verbose = verbose
-        self.__A = kwargs["A"] if "A" in kwargs else nx.to_numpy_array(self.get_graph())
-        self.__U1 = kwargs["U1"] if "U1" in kwargs else np.random.random((len(graph.nodes),self.__d))
-        self.__U2 = kwargs["U2"] if "U2" in kwargs else np.random.random((len(graph.nodes),self.__d))
+        self.__A = kwargs["A"] if "A" in kwargs else nx.to_numpy_array(self.get_graph(),
+                                                                       nodelist=np.arange(len(graph.nodes)))
+        self.__U1 = kwargs["U1"] if "U1" in kwargs else np.random.random((len(graph.nodes), self.__d))
+        self.__U2 = kwargs["U2"] if "U2" in kwargs else np.random.random((len(graph.nodes), self.__d))
         self.__Z = None
 
     def embed(self):

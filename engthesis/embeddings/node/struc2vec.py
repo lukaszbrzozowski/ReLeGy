@@ -44,7 +44,7 @@ class Struc2Vec(Model):
         N = len(self.get_graph().nodes)
         deg_seq = np.array(self.get_graph().degree(np.arange(N)))[:, 1].reshape(N, -1)
         k_max = self.__k
-        dist_matrix = floyd_warshall_numpy(self.get_graph(), nodelist=np.sort(self.get_graph().nodes))
+        dist_matrix = floyd_warshall_numpy(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
         f_cur = np.zeros((N, N))
         matrix_dict = {}
         for k in np.arange(k_max+1):

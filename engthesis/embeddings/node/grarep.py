@@ -20,7 +20,7 @@ class GraRep(Model):
         """
         super().__init__(graph)
 
-        self.__A: matrix = to_numpy_matrix(self.get_graph())
+        self.__A: matrix = to_numpy_matrix(self.get_graph(), nodelist=np.arange(self.get_graph().nodes))
         self.__d: int = d
         self.__K: int = K
         self.__lmbd: float = lmbd

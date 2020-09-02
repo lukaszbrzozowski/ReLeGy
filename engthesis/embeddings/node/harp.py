@@ -59,7 +59,7 @@ class HARP(Model):
 
     @staticmethod
     def __generate_convert_list(G):
-        A = nx.to_numpy_array(G)
+        A = nx.to_numpy_array(G, nodelist=np.arange(len(G.nodes)))
         N = A.shape[0]
         convert_list = np.array([np.arange(N), np.arange(N)]).T
         unq, inv, counts = np.unique(A, axis=0, return_inverse=True, return_counts=True)
