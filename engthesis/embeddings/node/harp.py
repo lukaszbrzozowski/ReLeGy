@@ -241,7 +241,7 @@ class HARP(Model):
         tr_matrix = transition_matrix[:, -2:]
         new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
-        for i, cur_graph in reversed(enumerate(list(graph_stack))):
+        for i, cur_graph in reversed(list(enumerate(graph_stack))):
 
             random_walks = self.__generate_random_walks(cur_graph)
 
