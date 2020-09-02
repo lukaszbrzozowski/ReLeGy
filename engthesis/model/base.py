@@ -4,10 +4,9 @@ from numpy import ndarray
 
 
 class Model(ABC):
-    __graph: Graph
 
     def __init__(self, graph):
-        self.__graph = graph
+        self.__graph: Graph = graph
         super().__init__()
 
     @abstractmethod

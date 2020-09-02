@@ -1,6 +1,6 @@
 from typing import Any
 
-from networkx import to_numpy_matrix
+from networkx import to_numpy_matrix, Graph
 import numpy as np
 from numpy import matrix, ndarray
 from gensim.models import Word2Vec
@@ -10,27 +10,31 @@ from engthesis.model.base import Model
 
 class Node2Vec(Model):
 
-    def __init__(self, graph, **kwargs) -> None:
+    def __init__(self,
+                 graph: Graph,
+                 d: int = 2,
+                 T: int = 40,
+                 window_size: int = 5,
+                 gamma: int = 1,
+                 p: float = 1,
+                 q: float = 1) -> None:
         """
-
-        :rtype: object
+        The initialization method of the Node2Vec model.
+        :param graph: The graph to be embedded
+        :param d: dimensionality of the embedding vectors
+        :param T: Length of the random walks
+        :param gamma: Number of times a random walk is started from each vertex
+        :param window_size: Window size for the SkipGram model
+        :param p: Parameter of the biased random walks
+        :param q: Parameter of the biased random walks
         """
-        __d: int
-        __T: int
-        __gamma: int
-        __window: int
-        __p: float
-        __q: float
         super().__init__(graph)
-        parameters = kwargs
-
-        self.__gamma = parameters["gamma"] if "gamma" in parameters else 1
-        self.__T = parameters["T"] if "T" in parameters else 2
-        self.__window = parameters["window"] if "window" in parameters else 5
-        self.__d = parameters["d"] if "d" in parameters else 2
-
-        self.__p = parameters["p"] if "p" in parameters else 1
-        self.__q = parameters["q"] if "q" in parameters else 1
+        self.__gamma: int = gamma
+        self.__T: int = T
+        self.__window: int = window_size
+        self.__d: int = d
+        self.__p: float = p
+        self.__q: float = q
 
         self.__model = None
 
@@ -87,7 +91,7 @@ class Node2Vec(Model):
         :param alpha: Learning rate
         :param min_alpha: Minimal value of the learning rate; if defined, alpha decreases linearly
         :param negative: number of negative samples. If 0, no negative sampling is used
-        :return: ndarray
+        :return: Embedding of the graph into R^d
         """
         rw = self.generate_random_walks()
         self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
