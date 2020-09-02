@@ -185,6 +185,7 @@ class HARP(Model):
             n2v = Node2Vec(G, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
                            p=self.__p, q=self.__q)
             random_walks = n2v.generate_random_walks()
+        return random_walks
 
     def __get_weights_from_model(self):
         wv = self.__model.wv
@@ -240,7 +241,7 @@ class HARP(Model):
         tr_matrix = transition_matrix[:, -2:]
         new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
-        for i, cur_graph in reversed(enumerate(graph_stack)):
+        for i, cur_graph in reversed(enumerate(list(graph_stack))):
 
             random_walks = self.__generate_random_walks(cur_graph)
 
