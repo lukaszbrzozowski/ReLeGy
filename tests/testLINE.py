@@ -1,8 +1,8 @@
-from engthesis.embeddings.node.grarep import GraRep
+from engthesis.embeddings.node.line import LINE
 from engthesis.graphs.examples import examplesDict
 
-def test_grarep_embeds_without_error():
+def test_line_embeds_without_error():
     for graph in examplesDict.values():
-        model = GraRep(graph)
+        model = LINE(graph)
         Z = model.embed()
         assert Z is not None

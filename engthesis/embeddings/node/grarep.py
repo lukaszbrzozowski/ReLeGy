@@ -9,7 +9,6 @@ class GraRep(Model):
     def __init__(self,
                  graph: Graph,
                  d: int = 2,
-                 similarity_matrix: matrix = None,
                  K: int = 1,
                  lmbd: float = 1) -> None:
         """
@@ -19,18 +18,14 @@ class GraRep(Model):
         :param K: Maximal order of similarity to be captured. Also, the returned matrix has dimensions N x (K * d)
         :param lmbd: Regularisation coefficient.
         """
-        __A: matrix
-        __d: int
-        __K: int
-        __lmbd: float
-        __isEmbed: bool
-
         super().__init__(graph)
-        self.__A = similarity_matrix if similarity_matrix is not None else to_numpy_matrix(self.get_graph())
-        self.__d = d
-        self.__K = K
-        self.__lmbd = lmbd
-        self.__isEmbed = False
+
+        self.__A: matrix = to_numpy_matrix(self.get_graph())
+        self.__d: int = d
+        self.__K: int = K
+        self.__lmbd: float = lmbd
+        self.__isEmbed: bool = False
+
         self.__modelDict = {}
 
     def info(self) -> str:

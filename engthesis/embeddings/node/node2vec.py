@@ -28,28 +28,20 @@ class Node2Vec(Model):
         :param p: Parameter of the biased random walks
         :param q: Parameter of the biased random walks
         """
-        __d: int
-        __T: int
-        __gamma: int
-        __window: int
-        __p: float
-        __q: float
         super().__init__(graph)
-
-        self.__gamma = gamma
-        self.__T = T
-        self.__window = window_size
-        self.__d = d
-
-        self.__p = p
-        self.__q = q
+        self.__gamma: int = gamma
+        self.__T: int = T
+        self.__window: int = window_size
+        self.__d: int = d
+        self.__p: float = p
+        self.__q: float = q
 
         self.__model = None
 
     def generate_random_walks(self) -> Any:
         G = self.get_graph()
         N: int = len(G.nodes)
-        A: matrix = to_numpy_matrix(G)
+        A: matrix = to_numpy_matrix(G, np.arange(len(G.nodes)))
         p: float = self.__p
         q: float = self.__q
         random_walks: ndarray = np.empty((N * self.__gamma, self.__T))

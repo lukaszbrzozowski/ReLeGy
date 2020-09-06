@@ -19,23 +19,17 @@ class DNGR(Model):
         :param alpha: probability of continuing the random walk instead of returning to the initial vertex
         :param T: Length of the random walks
         """
-        __d: int
-        __alpha: float
-        __T: int
-        __model: SDAE
-
         super().__init__(graph)
-
-        self.__d = d
-        self.__alpha = alpha
-        self.__T = T
-        self.__model = None
+        self.__d: int = d
+        self.__alpha: float = alpha
+        self.__T: int = T
+        self.__model: SDAE = None
 
     def info(self) -> str:
         return "TBI"
 
     def __random_surf(self) -> ndarray:
-        A = to_numpy_array(self.get_graph())
+        A = to_numpy_array(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
         scaled_A = self.__scale_sim_mat(A)
         P0 = np.identity(A.shape[0])
         P = P0

@@ -1,4 +1,4 @@
-from networkx import adjacency_matrix, Graph
+from networkx import to_numpy_matrix, Graph
 import numpy as np
 from engthesis.model.base import Model
 from scipy.sparse import csr_matrix
@@ -7,7 +7,6 @@ class GraphFactorization(Model):
 
     def __init__(self, graph: Graph,
                  d: int = 2,
-                 similarity_matrix: csr_matrix = None,
                  eps: float = 1e-7,
                  lmbd: float = 0) -> None:
         """
@@ -19,16 +18,12 @@ class GraphFactorization(Model):
         The algorithm stops when the difference between two reprezentations is less than eps
         :param lmbd: Regularisation coefficient.
         """
-        __A: csr_matrix
-        __d: int
-        __eps: float
-        __lmbd: float
-
         super().__init__(graph)
-        self.__A = similarity_matrix if similarity_matrix is not None else adjacency_matrix(self.get_graph())
-        self.__d = d
-        self.__eps = eps
-        self.__lmbd = lmbd
+
+        self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
+        self.__d: int = d
+        self.__eps: float = eps
+        self.__lmbd: float = lmbd
 
 
     def info(self) -> str:

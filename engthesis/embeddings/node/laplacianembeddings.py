@@ -1,31 +1,29 @@
 from typing import Dict, Any, Union, Callable
 
-from networkx import laplacian_matrix, adjacency_matrix
+from networkx import laplacian_matrix, to_numpy_matrix, Graph
 from scipy.optimize import minimize
 from scipy.sparse import csr_matrix
 
 from engthesis.model.base import Model
 import numpy as np
-from networkx import Graph
 
 
 class LaplacianEmbeddings(Model):
 
     def __init__(self,
                  graph: Graph,
-                 d: int = 2,
-                 similarity_matrix: csr_matrix = None) -> None:
+                 d: int = 2):
         """
         The initialization method of the Laplacian Embeddings model.
         :param graph: The graph to be embedded
         :param d: dimensionality of the embedding vectors
         :param similarity_matrix: Similarity matrix of the graph. Adjacency matrix of the graph is passed by default
         """
-        __A: csr_matrix
-        __d: int
         super().__init__(graph)
+
+        self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
         self.__d = d
-        self.__A = similarity_matrix if similarity_matrix is not None else adjacency_matrix(graph)
+
 
     def info(self) -> str:
         return "To be implemented"
@@ -43,8 +41,10 @@ class LaplacianEmbeddings(Model):
         """
 
         n = len(self.get_graph().nodes)
+
         L = laplacian_matrix(self.get_graph())
         D = L + self.__A
+
         Y0 = np.random.rand(n, self.__d).reshape(-1)
         Id = np.eye(self.__d)
         flat = lambda f: lambda Y_flat: f(Y_flat.reshape(n, self.__d)).reshape(-1)
