@@ -40,7 +40,7 @@ class HARP(Model):
         """
 
         super().__init__(graph)
-        self.__threshold: int = threshold
+        self.__threshold: int = threshold if len(graph.nodes) > threshold else len(graph.nodes)//2
         self.__L: int = L
         if self.__L is not None:
             self.__threshold = None

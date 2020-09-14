@@ -58,10 +58,12 @@ class DNGR(Model):
         PPMI[PPMI < 0] = 0
         return PPMI
 
-    def embed(self, n_layers=1, n_hid=500, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
+    def embed(self, n_layers=1, n_hid=None, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
               loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1, get_enc_model=True,
               get_enc_dec_model=False) -> ndarray:
-        if type(n_hid) == int:
+        if n_hid is None:
+            n_hid = self.__d
+        elif type(n_hid) == int:
             assert(n_hid == self.__d)
         else:
             assert(self.__d == n_hid[-1])

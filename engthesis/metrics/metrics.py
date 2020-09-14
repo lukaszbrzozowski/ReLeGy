@@ -9,8 +9,8 @@ def rmse(similarity_matrix, obtained_matrix):
     :return: The value of RMSE
     """
     N = similarity_matrix.shape[0]
-    frob_error_squared = np.linalg.norm(similarity_matrix-obtained_matrix)**2
-    return np.sqrt(frob_error_squared)/N
+    frob_error_squared = np.linalg.norm(similarity_matrix-obtained_matrix)
+    return frob_error_squared/N
 
 
 def nrmse(similarity_matrix, obtained_matrix):
