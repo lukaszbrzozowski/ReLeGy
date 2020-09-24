@@ -1,7 +1,8 @@
-from engthesis.model.base import Model
-from networkx import Graph, laplacian_matrix
 import numpy as np
+from networkx import Graph, laplacian_matrix
 from numpy import ndarray
+
+from engthesis.model.base import Model
 
 
 class GraphWave(Model):
@@ -67,6 +68,6 @@ class GraphWave(Model):
             for i in range(t.shape[0]):
                 cur_t = t[i]
                 phi = np.mean(np.exp(1j * cur_t * theta[iter_j]), axis=0)
-                Z[:, 2*iter_j*self.__d+2*i] = np.real(phi)
-                Z[:, 2*iter_j*self.__d+2*i+1] = np.imag(phi)
+                Z[:, 2 * iter_j * self.__d + 2 * i] = np.real(phi)
+                Z[:, 2 * iter_j * self.__d + 2 * i + 1] = np.imag(phi)
         return Z

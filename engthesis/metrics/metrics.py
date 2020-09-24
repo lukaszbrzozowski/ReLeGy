@@ -9,8 +9,8 @@ def rmse(similarity_matrix, obtained_matrix):
     :return: The value of RMSE
     """
     N = similarity_matrix.shape[0]
-    frob_error_squared = np.linalg.norm(similarity_matrix-obtained_matrix)
-    return frob_error_squared/N
+    frob_error_squared = np.linalg.norm(similarity_matrix - obtained_matrix)
+    return frob_error_squared / N
 
 
 def nrmse(similarity_matrix, obtained_matrix):
@@ -20,9 +20,9 @@ def nrmse(similarity_matrix, obtained_matrix):
     :param obtained_matrix: The matrix obtained with a representation method
     :return: The value of NRMSE
     """
-    frob_error = np.linalg.norm(similarity_matrix-obtained_matrix)
+    frob_error = np.linalg.norm(similarity_matrix - obtained_matrix)
     similarity_matrix_norm = np.linalg.norm(similarity_matrix)
-    return frob_error/similarity_matrix_norm
+    return frob_error / similarity_matrix_norm
 
 
 def precision_at_k(similarity_matrix, obtained_matrix):
@@ -42,10 +42,10 @@ def precision_at_k(similarity_matrix, obtained_matrix):
             return np.repeat(1, flat_sim.shape[0])
         else:
             return np.repeat(0, flat_sim.shape[0])
-    #TODO learn about thresholding
+    # TODO learn about thresholding
     ep = np.cumsum(sorted_flat_obs > 0)
     true_predictions = sorted_flat_sim > 0
-    return np.cumsum(true_predictions)/ep
+    return np.cumsum(true_predictions) / ep
 
 
 def average_precision(similarity_vector, obtained_vector):
@@ -58,7 +58,8 @@ def average_precision(similarity_vector, obtained_vector):
     prec_k = precision_at_k(similarity_vector, obtained_vector)
     flat_sim_positive = similarity_vector > 0
 
-    return np.sum(prec_k*flat_sim_positive)/np.sum(flat_sim_positive)
+    return np.sum(prec_k * flat_sim_positive) / np.sum(flat_sim_positive)
+
 
 def mean_average_precision(similarity_matrix, obtained_matrix):
     """
@@ -70,6 +71,7 @@ def mean_average_precision(similarity_matrix, obtained_matrix):
     return np.mean([average_precision(similarity_matrix[i, :], obtained_matrix[i, :])
                     for i in range(similarity_matrix.shape[0])])
 
+
 def all_average_precision(similarity_matrix, obtained_matrix):
     """
     A vector of average precision values for each vertex.
@@ -78,4 +80,4 @@ def all_average_precision(similarity_matrix, obtained_matrix):
     :return: The value of NRMSE
     """
     return np.array([average_precision(similarity_matrix[i, :], obtained_matrix[i, :])
-                    for i in range(similarity_matrix.shape[0])])
+                     for i in range(similarity_matrix.shape[0])])

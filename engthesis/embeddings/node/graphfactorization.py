@@ -1,7 +1,9 @@
-from networkx import to_numpy_matrix, Graph
 import numpy as np
-from engthesis.model.base import Model
+from networkx import to_numpy_matrix, Graph
 from scipy.sparse import csr_matrix
+
+from engthesis.model.base import Model
+
 
 class GraphFactorization(Model):
 
@@ -25,7 +27,6 @@ class GraphFactorization(Model):
         self.__eps: float = eps
         self.__lmbd: float = lmbd
 
-
     def info(self) -> str:
         return "To be implemented"
 
@@ -40,12 +41,11 @@ class GraphFactorization(Model):
             edges = list(G.edges)
             np.random.shuffle(edges)
             for i, j in edges:
-                eta = 1/np.sqrt(t)
+                eta = 1 / np.sqrt(t)
                 t += 1
-                Z[i, ] += eta*((self.__A[i, j]-np.dot(Z[i, ], Z[j, ])) * Z[j, ] - self.__lmbd * Z[i, ])
+                Z[i,] += eta * ((self.__A[i, j] - np.dot(Z[i,], Z[j,])) * Z[j,] - self.__lmbd * Z[i,])
                 t += 1
-                Z[j, ] = Z[j, ] + eta * ((self.__A[i, j] - np.dot(Z[i, ], Z[j, ])) * Z[i, ] - self.__lmbd * Z[j, ])
-            error = np.sum((Z-Z_previous)**2)
+                Z[j,] = Z[j,] + eta * ((self.__A[i, j] - np.dot(Z[i,], Z[j,])) * Z[i,] - self.__lmbd * Z[j,])
+            error = np.sum((Z - Z_previous) ** 2)
             print(error, end="\r")
         return Z
-

@@ -1,12 +1,12 @@
-from networkx import to_numpy_matrix, Graph
-import numpy as np
-from numpy import ndarray
-from gensim.models import Word2Vec
-
-from engthesis.model.base import Model
 import copy
 
+import numpy as np
+from gensim.models import Word2Vec
+from networkx import to_numpy_matrix, Graph
+from numpy import ndarray
 from six import iteritems
+
+from engthesis.model.base import Model
 
 
 class DeepWalk(Model):
@@ -16,7 +16,8 @@ class DeepWalk(Model):
                  d: int = 2,
                  T: int = 40,
                  gamma: int = 1,
-                 window_size: int = 5) -> None:
+                 window_size: int = 5,
+                 random_state: int = None) -> None:
         """
         The initialization method of the DeepWalk model.
         :param graph: The graph to be embedded
@@ -32,6 +33,7 @@ class DeepWalk(Model):
         self.__T: int = T
         self.__gamma: int = gamma
         self.__window: int = window_size
+        self.__random_state: int = random_state
 
     def generate_random_walks(self) -> list:
         G = self.get_graph()
@@ -39,7 +41,7 @@ class DeepWalk(Model):
         A = to_numpy_matrix(G, nodelist=np.arange(len(G.nodes)))
         # P - 1-step transition probability matrix
         baseP = np.diag(1 / np.sum(A, axis=1).A1) @ A
-        random_walks = np.empty((N*self.__gamma, self.__T))
+        random_walks = np.empty((N * self.__gamma, self.__T))
         P = copy.deepcopy(baseP)
         for i in range(self.__gamma):
             random_walk_matrix = np.empty((N, self.__T))
@@ -50,7 +52,7 @@ class DeepWalk(Model):
                 random_walk_matrix[:, j] = next_vertices
                 P = baseP[next_vertices, :]
 
-            random_walks[(i*N):((i+1)*N), :] = random_walk_matrix
+            random_walks[(i * N):((i + 1) * N), :] = random_walk_matrix
         retList = random_walks.astype(int).astype(str).tolist()
         return retList
 
@@ -59,7 +61,7 @@ class DeepWalk(Model):
 
     def __get_weights_from_model(self):
         wv = self.__model.wv
-        weight_matrix = np.empty((len(wv.vocab.keys()), self.__d+1))
+        weight_matrix = np.empty((len(wv.vocab.keys()), self.__d + 1))
         i = 0
         temp_vocab = {int(k): v for k, v in wv.vocab.items()}
         for word, vocab in sorted(iteritems(temp_vocab)):
@@ -77,12 +79,14 @@ class DeepWalk(Model):
         :param min_alpha: Minimal value of the learning rate; if defined, alpha decreases linearly
         :return: Embedding of the graph into R^d
         """
+        if self.__random_state is not None:
+            np.random.seed(self.__random_state)
+
         rw = self.generate_random_walks()
         self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
-                                min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=0)
+                                min_count=0, size=self.__d, window=self.__window,
+                                sg=1, hs=1, negative=0, seed=self.__random_state)
         self.__model.build_vocab(sentences=rw)
         self.__model.train(sentences=rw, total_examples=len(rw), total_words=len(self.get_graph().nodes),
                            epochs=iter_num)
         return self.__get_weights_from_model()
-
-

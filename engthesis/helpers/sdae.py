@@ -6,11 +6,11 @@ It was updated and slightly modified to allow for fine-tuning of DNGR
 """
 
 import os
-import numpy as np
 
-from keras.models import Model, Sequential
+import numpy as np
 from keras.layers import Input
 from keras.layers.core import Dense, Dropout
+from keras.models import Model, Sequential
 
 from . import nn_utils
 
@@ -30,7 +30,7 @@ class SDAE(object):
     '''
 
     def __init__(self, n_layers=1, n_hid=500, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
-                 loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1):
+                 loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1, random_state=None):
         '''
         Initializes parameters for stacked denoising autoencoders
         @param n_layers: number of layers, i.e., number of autoencoders to stack on top of each other.
@@ -72,6 +72,8 @@ class SDAE(object):
         self.optimizer = optimizer
 
         self.verbose = verbose
+
+        self.random_state = random_state
 
     def get_pretrained_sda(self, data_in, get_enc_model=True, get_enc_dec_model=False, model_layers=None):
         '''
@@ -130,7 +132,8 @@ class SDAE(object):
             hist = cur_model.fit(x=nn_utils.batch_generator(
                 data_in, data_in,
                 batch_size=self.batch_size,
-                shuffle=True
+                shuffle=True,
+                seed = self.random_state
             ),
                 epochs=self.nb_epoch,
                 steps_per_epoch=data_in.shape[0],
@@ -204,7 +207,7 @@ class SDAE(object):
         if type(n_hid) == int:
             n_hid = [n_hid] * n_layers
         else:
-            assert(type(n_hid[0]) == int or type(n_hid[0]) == np.int32)
+            assert (type(n_hid[0]) == int or type(n_hid[0]) == np.int32)
 
         if type(dropout) == int or type(dropout) == float:
             dropout = [dropout] * n_layers
@@ -220,7 +223,7 @@ class SDAE(object):
 
         return n_hid, dropout, enc_act, dec_act
 
-    def _get_intermediate_output(self, model, data_in, n_layer, train, n_out, batch_size, dtype=np.float32):
+    def  _get_intermediate_output(self, model, data_in, n_layer, train, n_out, batch_size, dtype=np.float32):
         '''
         Returns output of a given intermediate layer in a model
         @param model: model to get output from
@@ -233,7 +236,7 @@ class SDAE(object):
         '''
         data_out = np.zeros(shape=(data_in.shape[0], n_out))
 
-        x_batch_gen = nn_utils.x_generator(data_in, batch_size=batch_size, shuffle=False)
+        x_batch_gen = nn_utils.x_generator(data_in, batch_size=batch_size, shuffle=False, seed=self.random_state)
         stop_iter = int(np.ceil(data_in.shape[0] / batch_size))
 
         for i in range(stop_iter):

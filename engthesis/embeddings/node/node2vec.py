@@ -1,9 +1,9 @@
 from typing import Any
 
-from networkx import to_numpy_matrix, Graph
 import numpy as np
-from numpy import matrix, ndarray
 from gensim.models import Word2Vec
+from networkx import to_numpy_matrix, Graph
+from numpy import matrix, ndarray
 
 from engthesis.model.base import Model
 

@@ -1,12 +1,13 @@
-from engthesis.model.base import Model
+import networkx as nx
+import numpy as np
+from gensim.models import Word2Vec
+from networkx import Graph
+from numpy import ndarray
+from six import iteritems
+
 from engthesis.embeddings.node.deepwalk import DeepWalk
 from engthesis.embeddings.node.node2vec import Node2Vec
-import numpy as np
-from numpy import ndarray
-import networkx as nx
-from networkx import Graph
-from gensim.models import Word2Vec
-from six import iteritems
+from engthesis.model.base import Model
 
 
 class HARP(Model):
@@ -40,7 +41,7 @@ class HARP(Model):
         """
 
         super().__init__(graph)
-        self.__threshold: int = threshold if len(graph.nodes) > threshold else len(graph.nodes)//2
+        self.__threshold: int = threshold if len(graph.nodes) > threshold else len(graph.nodes) // 2
         self.__L: int = L
         if self.__L is not None:
             self.__threshold = None

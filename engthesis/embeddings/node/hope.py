@@ -1,6 +1,7 @@
-from networkx import to_numpy_matrix, Graph
 import numpy as np
+from networkx import to_numpy_matrix, Graph
 from numpy import matrix, ndarray
+
 from engthesis.model.base import Model
 
 
@@ -28,7 +29,6 @@ class HOPE(Model):
         self.__matrixDict: dict = {}
         self.__isEmbed: bool = False
 
-
     def info(self):
         return "To be implemented"
 
@@ -37,23 +37,23 @@ class HOPE(Model):
         Mg, Ml = None, None
         if self.__proximity == "Katz" or self.__proximity not in ["RPR", "AA", "CN"]:
             par = self.__param
-            Mg = np.identity(N) - par*self.__A
-            Ml = par*self.__A
+            Mg = np.identity(N) - par * self.__A
+            Ml = par * self.__A
         elif self.__proximity == "RPR":
             par = self.__param
             D = np.diag(np.sum(self.__A, axis=0).A1)
             D1 = np.linalg.inv(D)
             P = D1 @ self.__A
-            Mg = np.identity(N) - par*P
-            Ml = (1-par)*np.identity(N)
+            Mg = np.identity(N) - par * P
+            Ml = (1 - par) * np.identity(N)
         elif self.__proximity == "CN":
             Mg = np.identity(N)
             Ml = self.__A @ self.__A
         elif self.__proximity == "AA":
-            D = np.diag([1/(np.sum(self.__A[:, i])+np.sum(self.__A[i, :])) for i in range(N)])
+            D = np.diag([1 / (np.sum(self.__A[:, i]) + np.sum(self.__A[i, :])) for i in range(N)])
             Mg = np.identity(N)
             Ml = self.__A @ D @ self.__A
-        assert(Mg is not None and Ml is not None)
+        assert (Mg is not None and Ml is not None)
         # JDGSVD shall be implemented here
         S = np.linalg.inv(Mg) @ Ml
         U, D, VT = np.linalg.svd(S)
@@ -68,6 +68,3 @@ class HOPE(Model):
         if not self.__isEmbed:
             print("The graph has not been embedded yet")
         return self.__matrixDict
-
-
-

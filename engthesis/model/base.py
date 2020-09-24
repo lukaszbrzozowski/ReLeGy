@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 from networkx import Graph
 from numpy import ndarray
 

@@ -1,8 +1,9 @@
-from engthesis.model.base import Model
-from networkx import to_numpy_array, Graph
 import numpy as np
+from networkx import to_numpy_array, Graph
 from numpy import ndarray
+
 from engthesis.helpers.sdae import SDAE
+from engthesis.model.base import Model
 
 
 class DNGR(Model):
@@ -11,7 +12,8 @@ class DNGR(Model):
                  graph: Graph,
                  d: int = 2,
                  alpha: float = 0.9,
-                 T: int = 40):
+                 T: int = 40,
+                 random_state: int = None):
         """
         The initialization method of the DNGR model.
         :param graph: The graph to be embedded
@@ -24,6 +26,7 @@ class DNGR(Model):
         self.__alpha: float = alpha
         self.__T: int = T
         self.__model: SDAE = None
+        self.__random_state: int = random_state
 
     def info(self) -> str:
         return "TBI"
@@ -61,12 +64,15 @@ class DNGR(Model):
     def embed(self, n_layers=1, n_hid=None, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
               loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1, get_enc_model=True,
               get_enc_dec_model=False) -> ndarray:
+        if self.__random_state is not None:
+            np.random.seed(self.__random_state)
+
         if n_hid is None:
             n_hid = self.__d
         elif type(n_hid) == int:
-            assert(n_hid == self.__d)
+            assert (n_hid == self.__d)
         else:
-            assert(self.__d == n_hid[-1])
+            assert (self.__d == n_hid[-1])
         M = self.__random_surf()
         PPMI = self.__get_ppmi(M)
         sdae = SDAE(n_layers, n_hid, dropout, enc_act, dec_act, bias, loss_fn, batch_size, nb_epoch, optimizer, verbose)

@@ -1,11 +1,11 @@
 from typing import Dict, Any, Union, Callable
 
+import numpy as np
 from networkx import laplacian_matrix, to_numpy_matrix, Graph
 from scipy.optimize import minimize
 from scipy.sparse import csr_matrix
 
 from engthesis.model.base import Model
-import numpy as np
 
 
 class LaplacianEmbeddings(Model):
@@ -23,7 +23,6 @@ class LaplacianEmbeddings(Model):
 
         self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
         self.__d = d
-
 
     def info(self) -> str:
         return "To be implemented"
