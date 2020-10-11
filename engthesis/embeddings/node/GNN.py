@@ -1,10 +1,85 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
 import datetime as time
+import networkx as nx
+import scipy.sparse as sp
+from collections import namedtuple
+
+from engthesis.model.base import Model
+
+SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
+
+tf.disable_v2_behavior()
+
+def weight_variable(shape, nm):
+    # function to initialize weights
+    initial = tf.truncated_normal(shape, stddev=0.1)
+    tf.summary.histogram(nm, initial, collections=['always'])
+    return tf.Variable(initial, name=nm)
+
+def from_EN_to_GNN(E, N):
+    """
+    :param E: # E matrix - matrix of edges : [[id_p, id_c, graph_id],...]
+    :param N: # N matrix - [node_features, graph_id (to which the node belongs)]
+    :return: # L matrix - list of graph targets [tar_g_1, tar_g_2, ...]
+    """
+    N_full = N
+    N = N[:, :-1]  # avoid graph_id
+    e = E[:, :2]  # take only first tow columns => id_p, id_c
+    feat_temp = np.take(N, e, axis=0)  # take id_p and id_c  => (n_archs, 2, label_dim)
+    feat = np.reshape(feat_temp, [len(E), -1])  # (n_archs, 2*label_dim) => [[label_p, label_c], ...]
+    # creating input for gnn => [id_p, id_c, label_p, label_c]
+    inp = np.concatenate((E[:, :2], feat), axis=1)
+    # creating arcnode matrix, but transposed
+    """
+    1 1 0 0 0 0 0 
+    0 0 1 1 0 0 0
+    0 0 0 0 1 1 1    
+    """  # for the indices where to insert the ones, stack the id_p and the column id (single 1 for column)
+    arcnode = SparseMatrix(indices=np.stack((E[:, 0], np.arange(len(E))), axis=1),
+                           values=np.ones([len(E)]).astype(np.float32),
+                           dense_shape=[len(N), len(E)])
+
+    # get the number of graphs => from the graph_id
+    num_graphs = int(max(N_full[:, -1]) + 1)
+    # get all graph_ids
+    g_ids = N_full[:, -1]
+    g_ids = g_ids.astype(np.int32)
+
+    # creating graphnode matrix => create identity matrix get row corresponding to id of the graph
+    # graphnode = np.take(np.eye(num_graphs), g_ids, axis=0).T
+    # substitued with same code as before
+    graphnode = SparseMatrix(indices=np.stack((g_ids, np.arange(len(g_ids))), axis=1),
+                             values=np.ones([len(g_ids)]).astype(np.float32),
+                             dense_shape=[num_graphs, len(N)])
+
+    # print(graphnode.shape)
+
+    return inp, arcnode, graphnode
+
+def from_nx_to_GNN(graph: nx.Graph, idx_labels: list):
+    n = len(graph.nodes)
+    edges = np.array(list(graph.edges)) # node indices from 0 to |G|-1
+    edges = edges[np.lexsort((edges[:, 1], edges[:, 0]))]  # reorder list of edges also by second column
+    features = sp.eye(np.max(edges + 1), dtype=np.float32).tocsr()
+
+    labels = np.eye(max(idx_labels[:, 1]) + 1, dtype=np.int32)[idx_labels[:, 1]]  # one-hot encoding of labels
+
+    E = np.concatenate((edges, np.zeros((len(edges), 1), dtype=np.int32)), axis=1)
+    N = np.concatenate((features.toarray(), np.zeros((features.shape[0], 1), dtype=np.int32)), axis=1)
+
+    mask_test = np.zeros(shape=(n,), dtype=np.float32())
+    mask_test[np.random.choice(np.arange(n), size = n//10, replace=False)] = 1
+
+    mask_train = 1.0 - mask_test
+
+    inp, arcnode, graphnode = from_EN_to_GNN(E, N)
+
+    return inp, arcnode, graphnode, labels, mask_test, mask_train
 
 # class for the core of the architecture
-class GNN:
-    def __init__(self, net,  input_dim, output_dim, state_dim, max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
+class GNN(Model):
+    def __init__(self, graph: nx.Graph, idx_labels, embed_dim, mask_train=None, mask_test=None, num_epoch=100, max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
                  param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False, mask_flag=False):
         """
                create GNN instance. Feed this parameters:
@@ -24,14 +99,26 @@ class GNN:
 
         np.random.seed(0)
         tf.set_random_seed(0)
+
+        super().__init__(graph)
+
+        inp, arcnode, graphnode, labels, mask_test, mask_train = from_nx_to_GNN(graph, idx_labels)
+
+        self.inp = inp
+        self.arcnode = arcnode
+        self.graphnode = graphnode
+        self.labels = labels
+        self.mask_test = mask_test
+        self.mask_train = mask_train
+        self.input_dim = self.inp.shape[1]
+        self.output_dim = self.labels.shape[1]
+        self.state_dim = embed_dim
         self.tensorboard = tensorboard
         self.max_iter = max_it
-        self.net = net
+        self.num_epoch = num_epoch
+        self.net = Net(self.input_dim, self.state_dim, self.output_dim)
         self.optimizer = optimizer(learning_rate, name="optim")
         self.state_threshold = threshold
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.state_dim = state_dim
         self.graph_based = graph_based
         self.mask_flag = mask_flag
         self.build()
@@ -50,7 +137,7 @@ class GNN:
         # self.saver = tf.train.Saver()
         # self.save_path = "tmp/" + param + "saves/model.ckpt"
 
-    def VariableState(self):
+    def variableState(self):
         '''Define placeholders for input, output, state, state_old, arch-node conversion matrix'''
         # placeholder for input and output
 
@@ -76,8 +163,8 @@ class GNN:
     def build(self):
         '''build the architecture, setting variable, loss, training'''
         # network
-        self.VariableState()
-        self.loss_op = self.Loop()
+        self.variableState()
+        self.loss_op = self.loop()
 
         # loss
         with tf.variable_scope('loss'):
@@ -157,8 +244,7 @@ class GNN:
 
         return tf.logical_and(c1, c2)
 
-
-    def Loop(self):
+    def loop(self):
         # call to loop for the state computation and compute the output
         # compute state
         with tf.variable_scope('Loop'):
@@ -176,7 +262,7 @@ class GNN:
                 stf = st
             out = self.net.netOut(stf)
 
-        return out, num
+        return out, num, stf
 
     def Train(self, inputs, ArcNode, target, step, nodegraph=0.0, mask=None):
         ''' train methods: has to receive the inputs, arch-node matrix conversion, target,
@@ -306,3 +392,86 @@ class GNN:
               self.ArcNode: arcnode_}
         pr = self.session.run([self.loss_op], feed_dict=fd)
         return pr[0]
+
+    def embed(self):
+        # train the model
+        count = 0
+
+        ######
+
+        for j in range(0, self.num_epoch):
+            _, it = self.Train(inputs=self.inp, ArcNode=self.arcnode, target=self.labels, step=count, mask=self.mask_train)
+
+            if count % 10 == 0:
+                print("Epoch ", count)
+                print("Training: ", self.Validate(self.inp, self.arcnode, self.labels, count, mask=self.mask_train))
+                print("Test: ", self.Validate(self.inp, self.arcnode, self.labels, count, mask=self.mask_test))
+
+                # end = time.time()
+                # print("Epoch {} at time {}".format(j, end-start))
+                # start = time.time()
+
+            count = count + 1
+
+        return self.Predict(self.inp, self.arcnode, self.labels)[2]
+
+    def info(self):
+        pass
+
+class Net:
+    # class to define state and output network
+
+    def __init__(self, input_dim, state_dim, output_dim):
+        # initialize weight and parameter
+
+        self.EPSILON = 0.00000001
+
+        self.input_dim = input_dim
+        self.state_dim = state_dim
+        self.output_dim = output_dim
+        self.state_input = self.input_dim - 1 + state_dim  # removing the id_ dimension
+
+        #### TO BE SET ON A SPECIFIC PROBLEM
+        self.state_l1 = 5
+        self.state_l2 = self.state_dim
+
+        self.output_l1 = 5
+        self.output_l2 = self.output_dim
+
+    def netSt(self, inp):
+        with tf.variable_scope('State_net'):
+
+            layer1 = tf.layers.dense(inp, self.state_l1, activation=tf.nn.tanh)
+            layer2 = tf.layers.dense(layer1, self.state_l2, activation=tf.nn.tanh)
+
+            return layer2
+
+    def netOut(self, inp):
+
+            layer1 = tf.layers.dense(inp, self.output_l1, activation=tf.nn.tanh)
+            layer2 = tf.layers.dense(layer1, self.output_l2, activation=tf.nn.softmax)
+
+            return layer2
+
+    def Loss(self, output, target, output_weight=None, mask=None):
+        # method to define the loss function
+        #lo = tf.losses.softmax_cross_entropy(target, output)
+        output = tf.maximum(output, self.EPSILON, name="Avoiding_explosions")  # to avoid explosions
+        xent = -tf.reduce_sum(target * tf.log(output), 1)
+
+        mask = tf.cast(mask, dtype=tf.float32)
+        mask /= tf.reduce_mean(mask)
+        xent *= mask
+        lo = tf.reduce_mean(xent)
+        return lo
+
+    def Metric(self, target, output, output_weight=None, mask=None):
+        # method to define the evaluation metric
+
+        correct_prediction = tf.equal(tf.argmax(output, 1), tf.argmax(target, 1))
+        accuracy_all = tf.cast(correct_prediction, tf.float32)
+        mask = tf.cast(mask, dtype=tf.float32)
+        mask /= tf.reduce_mean(mask)
+        accuracy_all *= mask
+
+        return tf.reduce_mean(accuracy_all)
