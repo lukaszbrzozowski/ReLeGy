@@ -8,16 +8,23 @@ import tensorflow as tf
 class GraphWave(Model):
 
     def __init__(self,
-                 graph: Graph,
-                 d: int = 2,
-                 J: int = 1,
-                 eta: float = 0.85,
-                 gamma: float = 0.95,
-                 kernel = lambda x, s: tf.math.exp(-x * s),
-                 interval_start: float = 0,
-                 interval_stop: float = 1):
+                 graph: Graph):
         super().__init__(graph)
-        self.__d = d
+        self.__J = None
+        self.__eta = None
+        self.__gamma = None
+        self.__N = None
+        self.__L = None
+        self.__kernel = None
+        self.__thetas = None
+        self.__Z = None
+
+    def initialize(self,
+                   J: int = 1,
+                   eta: float = 0.85,
+                   gamma: float = 0.95,
+                   kernel = lambda x, s: tf.math.exp(-x * s)):
+        graph = self.get_graph()
         self.__J = J
         self.__eta = eta
         self.__gamma = gamma
@@ -25,8 +32,27 @@ class GraphWave(Model):
         self.__L = tf.convert_to_tensor(laplacian_matrix(graph, nodelist=np.arange(self.__N)).toarray(),
                                         dtype="float32")
         self.__kernel = kernel
-        self.__i_start = tf.constant(interval_start, "float32")
-        self.__i_stop = tf.constant(interval_stop, "float32")
+        self.__thetas = tf.cast(self.__calculate_theta(), "complex64")
+
+    def fit(self,
+            d: int = 2,
+            interval_start: float = 0,
+            interval_stop: float = 1):
+        t = tf.cast(tf.linspace(tf.constant(interval_start, "float32"),
+                                tf.constant(interval_stop, "float32"),
+                                d),
+                    "complex64")
+        Z = np.empty((self.__N, 2*self.__J * d))
+        for iter_j in range(self.__J):
+            for iter_i in range(t.shape[0]):
+                cur_t = t[iter_i]
+                phi = tf.reduce_mean(tf.exp(1j * cur_t * self.__thetas[iter_j]), axis=0)
+                Z[:, 2*iter_j*d+2*iter_i] = tf.math.real(phi)
+                Z[:, 2*iter_j*d+2*iter_i+1] = tf.math.imag(phi)
+        self.__Z = Z
+
+    def embed(self):
+        return self.__Z
 
     def info(self) -> str:
         raise NotImplementedError
@@ -50,14 +76,21 @@ class GraphWave(Model):
             s = tf.linspace(s_min, s_max, self.__J)
         return s
 
-    def embed(self) -> ndarray:
-        thetas = tf.cast(self.__calculate_theta(), "complex64")
-        t = tf.cast(tf.linspace(self.__i_start, self.__i_stop, self.__d), "complex64")
-        Z = np.empty((self.__N, 2*self.__J * self.__d))
-        for iter_j in range(self.__J):
-            for iter_i in range(t.shape[0]):
-                cur_t = t[iter_i]
-                phi = tf.reduce_mean(tf.exp(1j * cur_t * thetas[iter_j]), axis=0)
-                Z[:, 2*iter_j*self.__d+2*iter_i] = tf.math.real(phi)
-                Z[:, 2*iter_j*self.__d+2*iter_i+1] = tf.math.imag(phi)
-        return Z
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   J: int = 1,
+                   eta: float = 0.85,
+                   gamma: float = 0.95,
+                   kernel=lambda x, s: tf.math.exp(-x * s),
+                   interval_start: float = 0,
+                   interval_stop: float = 1,
+                   d: int = 2):
+        gw = GraphWave(graph)
+        gw.initialize(J=J,
+                      eta=eta,
+                      gamma=gamma,
+                      kernel=kernel)
+        gw.fit(interval_start=interval_start,
+               interval_stop=interval_stop,
+               d=d)
+        return gw.embed()

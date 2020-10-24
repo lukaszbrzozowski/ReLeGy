@@ -6,3 +6,5 @@ from .DeepWalk import DeepWalk
 from .Node2Vec import Node2Vec
 from .LINE import LINE
 from .HARP import HARP
+from .Struc2Vec import Struc2Vec
+from .GraphWave import GraphWave

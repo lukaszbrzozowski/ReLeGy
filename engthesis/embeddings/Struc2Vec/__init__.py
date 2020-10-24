@@ -11,49 +11,71 @@ from engthesis.model import Model
 class Struc2Vec(Model):
 
     def __init__(self,
-                 graph: Graph,
-                 d: int = 2,
-                 q: float = 0.3,
-                 T: int = 40,
-                 gamma: int = 1,
-                 window_size: int = 5,
-                 OPT1: bool = False,
-                 OPT3_k: int = None):
-        """
+                 graph: Graph):
 
-        :param graph:
-        :param d:
-        :param T:
-        :param gamma:
-        :param window_size:
-        """
         super().__init__(graph)
-        self.__d = d
+        self.__d = None
+        self.__T = None
+        self.__gamma = None
+        self.__q = None
+        self.__k = None
+        self.__model = None
+        self.__OPT1 = None
+        self.__N = None
+        self.__rw = None
+
+    def initialize(self,
+                   T: int = 40,
+                   gamma: int = 1,
+                   q: float = 0.3,
+                   OPT1: bool = False,
+                   OPT3_k: int = None):
+        graph = self.get_graph()
         self.__T = T
         self.__gamma = gamma
-        self.__window = window_size
         self.__q = q
-        self.__k = diameter(self.get_graph())
+        self.__k = diameter(graph)
+        self.__N = len(graph.nodes)
         if OPT3_k is not None:
-            assert (OPT3_k < self.__k)
+            assert (OPT3_k <= self.__k)
             self.__k = OPT3_k
-        self.__model = None
         self.__OPT1 = OPT1
-        # TODO OPT2
 
-    def generate_similarity_matrices(self):
-        N = len(self.get_graph().nodes)
-        deg_seq = np.array(self.get_graph().degree(np.arange(N)))[:, 1].reshape(N, -1)
+        matrix_dict = self.__generate_similarity_matrices()
+        w_in, w_f = self.__generate_multigraph_edges(matrix_dict)
+        self.__rw = self.__generate_random_walks(w_in, w_f)
+
+    def initialize_model(self,
+                         d: int = 2,
+                         alpha: float = 0.025,
+                         min_alpha: float =0.0001,
+                         window: int = 5,
+                         hs: int = 1,
+                         negative: int = 0):
+        model = Word2Vec(alpha=alpha,
+                         size=d,
+                         min_alpha=min_alpha,
+                         window=window,
+                         sg=1,
+                         hs=hs,
+                         negative=negative,
+                         min_count=1)
+        self.__model = model
+        self.__model.build_vocab(sentences=self.__rw)
+        self.__d = d
+
+    def __generate_similarity_matrices(self):
+        deg_seq = np.array(self.get_graph().degree(np.arange(self.__N)))[:, 1].reshape(self.__N, -1)
         k_max = self.__k
-        dist_matrix = floyd_warshall_numpy(self.get_graph(), nodelist=np.sort(self.get_graph().nodes))
-        f_cur = np.zeros((N, N))
+        dist_matrix = floyd_warshall_numpy(self.get_graph(), nodelist=np.arange(self.__N))
+        f_cur = np.zeros((self.__N, self.__N))
         matrix_dict = {}
         for k in np.arange(k_max + 1):
-            for u in np.arange(N):
-                mask_u = (dist_matrix[u, :] == k).reshape(N, -1)
+            for u in np.arange(self.__N):
+                mask_u = (dist_matrix[u, :] == k).reshape(self.__N, -1)
                 if np.any(mask_u):
-                    for v in np.arange(N):
-                        mask_v = (dist_matrix[v, :] == k).reshape(N, -1)
+                    for v in np.arange(self.__N):
+                        mask_v = (dist_matrix[v, :] == k).reshape(self.__N, -1)
                         if np.any(mask_v):
                             deg_u = deg_seq[mask_u]
                             deg_v = deg_seq[mask_v]
@@ -90,7 +112,7 @@ class Struc2Vec(Model):
         return dist
 
     @staticmethod
-    def generate_multigraph_edges(matrix_dict):
+    def __generate_multigraph_edges(matrix_dict):
         n_layers = len(matrix_dict)
         weights_in_layers = {"W" + str(i): np.nan_to_num(np.exp(-matrix_dict["F" + str(i)])) for i in range(n_layers)}
         avg_weights = [np.mean(weights_in_layers["W" + str(i)]) for i in range(n_layers)]
@@ -112,7 +134,7 @@ class Struc2Vec(Model):
     def info(self) -> str:
         raise NotImplementedError
 
-    def generate_random_walks(self, w_in, w_f):
+    def __generate_random_walks(self, w_in, w_f):
         Z = self.__generate_normalization(w_in)
         N = len(self.get_graph().nodes)
         random_walks = np.empty((self.__gamma * N, self.__T))
@@ -158,13 +180,39 @@ class Struc2Vec(Model):
             i += 1
         return weight_matrix
 
-    def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01) -> ndarray:
-        matrix_dict = self.generate_similarity_matrices()
-        w_in, w_f = self.generate_multigraph_edges(matrix_dict)
-        rw = self.generate_random_walks(w_in, w_f)
-        self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
-                                min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=0)
-        self.__model.build_vocab(sentences=rw)
-        self.__model.train(sentences=rw, total_examples=len(rw), total_words=len(self.get_graph().nodes),
-                           epochs=iter_num)
+    def fit(self, num_iter=1000):
+        self.__model.train(sentences=self.__rw,
+                           total_examples=len(self.__rw),
+                           epochs=num_iter)
+
+    def embed(self) -> ndarray:
         return self.__get_weights_from_model()
+
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   T: int = 40,
+                   gamma: int = 1,
+                   q: float = 0.3,
+                   OPT1: bool = False,
+                   OPT3_k: int = None,
+                   d: int = 2,
+                   alpha: float = 0.025,
+                   min_alpha: float = 0.0001,
+                   window: int = 5,
+                   hs: int = 1,
+                   negative: int = 0,
+                   num_iter=1000):
+        s2v = Struc2Vec(graph)
+        s2v.initialize(T=T,
+                       gamma=gamma,
+                       q=q,
+                       OPT1=OPT1,
+                       OPT3_k=OPT3_k)
+        s2v.initialize_model(d=d,
+                             alpha=alpha,
+                             min_alpha=min_alpha,
+                             window=window,
+                             hs=hs,
+                             negative=negative)
+        s2v.fit(num_iter)
+        return s2v.embed()

@@ -288,3 +288,36 @@ class HARP(Model):
 
     def embed(self) -> ndarray:
         return self.__get_weights_from_model()[:, 1:]
+
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   threshold: int = 100,
+                   L: int = None,
+                   T: int = 40,
+                   gamma: int = 1,
+                   p: int = 1,
+                   q: int = 1,
+                   init_verbose: bool = True,
+                   d: int = 2,
+                   alpha: float = 0.025,
+                   min_alpha: float = 0.0001,
+                   hs: int = 1,
+                   negative: int = 0,
+                   window: int = 5,
+                   num_iter=1000):
+        harp = HARP(graph)
+        harp.initialize(threshold=threshold,
+                        L=L,
+                        T=T,
+                        gamma=gamma,
+                        p=p,
+                        q=q,
+                        verbose=init_verbose)
+        harp.initialize_model(d=d,
+                              alpha=alpha,
+                              min_alpha=min_alpha,
+                              hs=hs,
+                              negative=negative,
+                              window=window)
+        harp.fit(num_iter=num_iter)
+        return harp.embed()
