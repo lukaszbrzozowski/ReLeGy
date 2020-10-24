@@ -5,9 +5,13 @@ from networkx import Graph
 from numpy import ndarray
 from six import iteritems
 
-from engthesis.embeddings.node.deepwalk import DeepWalk
-from engthesis.embeddings.node.node2vec import Node2Vec
-from engthesis.model.base import Model
+from engthesis.embeddings.DeepWalk import DeepWalk
+from engthesis.embeddings.Node2Vec import Node2Vec
+from engthesis.model import Model
+
+from engthesis.embeddings.DeepWalk import DeepWalk
+from engthesis.embeddings.Node2Vec import Node2Vec
+from engthesis.model import Model
 
 
 class HARP(Model):

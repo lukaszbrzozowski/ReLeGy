@@ -3,7 +3,7 @@ from networkx import to_numpy_array, Graph
 from numpy import ndarray
 
 from engthesis.helpers.sdae import SDAE
-from engthesis.model.base import Model
+from engthesis.model import Model
 
 
 class DNGR(Model):

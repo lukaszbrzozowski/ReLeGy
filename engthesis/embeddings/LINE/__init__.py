@@ -1,7 +1,7 @@
 import networkx as nx
 import numpy as np
 
-from engthesis.model.base import Model
+from engthesis.model import Model
 
 
 class LINE(Model):

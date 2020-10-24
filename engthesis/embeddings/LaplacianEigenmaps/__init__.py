@@ -1,3 +1,5 @@
+from engthesis.model import Model
+
 from typing import Dict, Any, Union, Callable
 
 import numpy as np
@@ -5,10 +7,8 @@ from networkx import laplacian_matrix, to_numpy_matrix, Graph
 from scipy.optimize import minimize
 from scipy.sparse import csr_matrix
 
-from engthesis.model.base import Model
 
-
-class LaplacianEmbeddings(Model):
+class LaplacianEigenmaps(Model):
 
     def __init__(self,
                  graph: Graph,
@@ -20,6 +20,8 @@ class LaplacianEmbeddings(Model):
         :param similarity_matrix: Similarity matrix of the graph. Adjacency matrix of the graph is passed by default
         """
         super().__init__(graph)
+
+        # TODO change adjacency matrix and laplacian to ndarray instead of sparse matrix
 
         self.__A: csr_matrix = to_numpy_matrix(self.get_graph())
         self.__d = d

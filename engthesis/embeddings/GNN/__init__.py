@@ -5,7 +5,7 @@ import networkx as nx
 import scipy.sparse as sp
 from collections import namedtuple
 
-from engthesis.model.base import Model
+from engthesis.model import Model
 
 SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 

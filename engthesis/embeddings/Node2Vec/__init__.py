@@ -5,7 +5,7 @@ from gensim.models import Word2Vec
 from networkx import to_numpy_matrix, Graph
 from numpy import matrix, ndarray
 
-from engthesis.model.base import Model
+from engthesis.model import Model
 
 
 class Node2Vec(Model):

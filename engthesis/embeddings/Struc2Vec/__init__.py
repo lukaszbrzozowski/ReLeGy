@@ -5,7 +5,7 @@ from networkx import Graph, diameter, floyd_warshall_numpy
 from numpy import ndarray
 from six import iteritems
 
-from engthesis.model.base import Model
+from engthesis.model import Model
 
 
 class Struc2Vec(Model):
