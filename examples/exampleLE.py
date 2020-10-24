@@ -10,9 +10,9 @@ finish_time = time()
 print(finish_time-start_time)
 
 
-start_time=time()
+start_time = time()
 LE = emb.LaplacianEigenmaps(G)
-LE.initialize(d = 2)
+LE.initialize(d=2)
 LE.fit(maxiter=200)
 Z = LE.embed()
 finish_time = time()

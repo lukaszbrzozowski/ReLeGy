@@ -22,6 +22,9 @@ class LaplacianEigenmaps(Model):
         self.__eq_cons = None
         self.__result = None
 
+        self.__initialized = False
+        self.__fitted = False
+
     def initialize(self,
                    d: int = 2):
         self.__d = d
@@ -42,6 +45,9 @@ class LaplacianEigenmaps(Model):
                                                                            lambda Y: np.sum((Y.T @ D @ Y - Id) ** 2)),
                                                                        "jac": self.__flat(lambda Y: 2 * D @ Y)}
 
+        self.__initialized = True
+        self.__fitted = False
+
     def info(self) -> str:
         raise NotImplementedError
 
@@ -57,6 +63,9 @@ class LaplacianEigenmaps(Model):
         :return: The graph embedding in R^d
         """
 
+        if not self.__initialized:
+            raise Exception("The method 'initialize' must be called before fitting")
+
         res = minimize(self.__flat(self.__func),
                        self.__Y0,
                        method='SLSQP',
@@ -65,8 +74,13 @@ class LaplacianEigenmaps(Model):
                        options={'ftol': ftol, 'disp': verbose, 'maxiter': num_iter})
 
         self.__result = res.x.reshape(-1, self.__d)
+        self.__fitted = True
 
     def embed(self) -> np.ndarray:
+        if not self.__initialized:
+            raise Exception("The methods 'initialize' and 'fit' must be called before embedding")
+        if not self.__fitted:
+            raise Exception("The method 'fit' must be called before embedding")
         return self.__result
 
     @staticmethod
