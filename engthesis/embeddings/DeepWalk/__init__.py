@@ -62,6 +62,9 @@ class DeepWalk(Model):
                                                   temp_dist,
                                                   self.__T)
         return hmm.sample().numpy().astype("str").tolist()
+
+    def get_random_walks(self):
+        return self.__rw
     def info(self) -> str:
         raise NotImplementedError
 

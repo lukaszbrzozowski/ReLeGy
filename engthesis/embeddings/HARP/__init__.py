@@ -9,58 +9,62 @@ from engthesis.embeddings.DeepWalk import DeepWalk
 from engthesis.embeddings.Node2Vec import Node2Vec
 from engthesis.model import Model
 
-from engthesis.embeddings.DeepWalk import DeepWalk
-from engthesis.embeddings.Node2Vec import Node2Vec
-from engthesis.model import Model
-
 
 class HARP(Model):
     def __init__(self,
-                 graph: Graph,
-                 d: int = 2,
-                 method: str = "DeepWalk",
-                 threshold: int = 100,
-                 L: int = None,
-                 T: int = 40,
-                 window_size: int = 5,
-                 gamma: int = 1,
-                 p: float = 1,
-                 q: float = 1,
-                 verbose: bool = 1):
-        """
-        The initialization method of the HARP model.
-        :param graph: The graph to be embedded
-        :param d: dimensionality of the embedding vectors
-        :param method: The method to use in representation learning after the graph coarsening.
-        Possible are "DeepWalk", "Node2Vec" and #TODO add LINE to HARP
-        "LINE"
-        :param threshold: The maximal number of vertices of the coarsened graph. Not used if L is passed.
-        :param L: Number of iterations of the graph coarsening.
-        :param T: Length of the random walks (DeepWalk and Node2Vec)
-        :param gamma: Number of times a random walk is started from each vertex (DeepWalk and Node2Vec)
-        :param window_size: Window size for the SkipGram model (DeepWalk and Node2Vec)
-        :param p: Parameter of the biased random walks (Node2Vec)
-        :param q: Parameter of the biased random walks (Node2Vec)
-        :param verbose: Verbosity of the graph coarsening
-        """
+                 graph: Graph):
 
         super().__init__(graph)
-        self.__threshold: int = threshold if len(graph.nodes) > threshold else len(graph.nodes) // 2
-        self.__L: int = L
+        self.__threshold = None
+        self.__method = None
+        self.__L = None
+        self.__T = None
+        self.__gamma = None
+        self.__verbose = None
+        self.__p = None
+        self.__q = None
+        self.__graph_stack = None
+        self.__transition_matrix = None
+
+        self.__model = None
+
+    def initialize(self,
+                   method: str = "DeepWalk",
+                   threshold: int = 100,
+                   L: int = None,
+                   T: int = 40,
+                   gamma: int = 1,
+                   p: int = 1,
+                   q: int = 1,
+                   verbose: bool = True):
+        graph = self.get_graph()
+        self.__method = method
+        if threshold is not None:
+            self.__threshold = threshold if len(graph.nodes) > threshold else len(graph.nodes) // 2
         if self.__L is not None:
             self.__threshold = None
-        self.__d: int = d
-        self.__method: str = method
-        assert (self.__method in ["DeepWalk", "Node2Vec", "LINE"])
+        self.__L = L
+        self.__T = T
+        self.__gamma = gamma
+        self.__p = p
+        self.__q = q
+        self.__verbose = verbose
 
-        self.__T: int = T
-        self.__gamma: int = gamma
-        self.__window: int = window_size
-        self.__verbose: bool = verbose
+        self.__graph_stack, self.__transition_matrix = self.generate_collapsed_graphs()
 
-        self.__p: float = p
-        self.__q: float = q
-        self.__model = None
+    def initialize_model(self,
+                         d: int = 2,
+                         alpha: float = 0.025,
+                         min_alpha: float = 0.0001,
+                         hs: int = 1,
+                         negative: int = 0,
+                         window: int = 5):
+        self.__d = d
+        self.__alpha = alpha
+        self.__min_alpha = min_alpha
+        self.__hs = hs
+        self.__negative = negative
+        self.__window = window
 
     @staticmethod
     def __generate_convert_list(G):
@@ -180,17 +184,22 @@ class HARP(Model):
             raise ValueError("None of the number of graphs L or node number threshold were specified")
 
     def info(self) -> str:
-        return "TBI"
+        raise NotImplementedError
 
     def __generate_random_walks(self, G):
         random_walks = None
         if self.__method == "DeepWalk":
-            dw = DeepWalk(G, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window)
-            random_walks = dw.generate_random_walks()
+            dw = DeepWalk(G)
+            dw.initialize(self.__T,
+                          self.__gamma)
+            random_walks = dw.get_random_walks()
         elif self.__method == "Node2Vec":
-            n2v = Node2Vec(G, d=self.__d, T=self.__T, gamma=self.__gamma, window_size=self.__window,
-                           p=self.__p, q=self.__q)
-            random_walks = n2v.generate_random_walks()
+            n2v = Node2Vec(G)
+            n2v.initialize(T=self.__T,
+                           gamma=self.__gamma,
+                           p=self.__p,
+                           q=self.__q)
+            random_walks = n2v.get_random_walks()
         return random_walks
 
     def __get_weights_from_model(self):
@@ -222,8 +231,9 @@ class HARP(Model):
             assert (word in wv.vocab)
             wv.syn0[wv.vocab[word].index] = row[1:]
 
-    def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01) -> ndarray:
-        graph_stack, transition_matrix = self.generate_collapsed_graphs()
+    def fit(self,
+            num_iter=1000) -> ndarray:
+        graph_stack, transition_matrix = self.__graph_stack, self.__transition_matrix
 
         last_graph = graph_stack.pop()  # We treat the last created graph separately,
         # because we don't update the weights
@@ -231,19 +241,20 @@ class HARP(Model):
         random_walks = self.__generate_random_walks(last_graph)
         assert (random_walks is not None)
 
-        self.__model = Word2Vec(alpha=alpha,
-                                min_alpha=min_alpha,
-                                min_count=0,
+        self.__model = Word2Vec(alpha=self.__alpha,
+                                min_alpha=self.__min_alpha,
+                                min_count=1,
                                 size=self.__d,
                                 window=self.__window,
                                 sg=1,
-                                hs=1,
-                                negative=0)
+                                hs=self.__hs,
+                                negative=self.__negative)
+
         self.__model.build_vocab(sentences=random_walks)
+
         self.__model.train(sentences=random_walks,
                            total_examples=len(random_walks),
-                           total_words=len(last_graph.nodes),
-                           epochs=iter_num)
+                           epochs=num_iter)
 
         weight_matrix = self.__get_weights_from_model()
         tr_matrix = transition_matrix[:, -2:]
@@ -253,16 +264,27 @@ class HARP(Model):
 
             random_walks = self.__generate_random_walks(cur_graph)
 
-            self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
-                                    min_count=0, size=self.__d, window=self.__window, sg=1, hs=1, negative=0)
+            self.__model = Word2Vec(alpha=self.__alpha,
+                                    min_alpha=self.__min_alpha,
+                                    min_count=1,
+                                    size=self.__d,
+                                    window=self.__window,
+                                    sg=1,
+                                    hs=self.__hs,
+                                    negative=self.__negative)
+
             self.__model.build_vocab(sentences=random_walks)
+
             self.__update_model_weights(new_wm)
-            self.__model.train(sentences=random_walks, total_examples=len(random_walks),
-                               total_words=len(cur_graph.nodes),
-                               epochs=iter_num)
+
+            self.__model.train(sentences=random_walks,
+                               total_examples=len(random_walks),
+                               epochs=num_iter)
+
             if i > 0:  # We don't need to update matrices after the last graph iteration
                 weight_matrix = self.__get_weights_from_model()
                 tr_matrix = transition_matrix[:, (i - 1):(i + 1)]
                 new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
-        return self.__get_weights_from_model()
+    def embed(self) -> ndarray:
+        return self.__get_weights_from_model()[:, 1:]

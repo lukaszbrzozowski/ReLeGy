@@ -76,6 +76,9 @@ class Node2Vec(Model):
 
         return random_walks.astype(int).astype(str).tolist()
 
+    def get_random_walks(self):
+        return self.__rw
+
     def info(self) -> str:
         raise NotImplementedError
 
