@@ -1,33 +1,41 @@
 from engthesis.model import Model
 from networkx import to_numpy_array, Graph
-from numpy import ndarray, arange
+from numpy import arange
 import tensorflow as tf
-import warnings
+
 
 
 class HOPE(Model):
 
     def __init__(self,
                  graph: Graph,
-                 d: int = 2,
-                 proximity: str = "Katz",
-                 **kwargs):
+                 keep_full_SVD: bool = True):
 
         super().__init__(graph)
-        assert proximity in ["Katz", "RPR", "CN", "AA"], "Proximity measure must be 'Katz', 'RPR', 'CN' or 'AA'"
-        A = to_numpy_array(graph, nodelist=arange(len(graph.nodes)))
-        self.__N = tf.constant(A.shape[0], dtype="float32")
-        self.__A = tf.constant(A)
-        self.__proximity = proximity
+        self.__A = None
+        self.__N = None
+        self.__proximity = None
         self.__proximity_param = None
-        self.__d = tf.constant(d)
+        self.__keep_SVD = keep_full_SVD
+        self.__Mg = None
+        self.__Ml = None
+        self.__SVDs = None
+        self.__results = None
+
+    def initialize(self,
+                   proximity: str = "Katz",
+                   **kwargs):
+
+        assert proximity in ["Katz", "RPR", "CN", "AA"], "Proximity measure must be 'Katz', 'RPR', 'CN' or 'AA'"
+        graph = self.get_graph()
+        A = to_numpy_array(graph, nodelist=arange(len(graph.nodes)))
+        self.__A = tf.constant(A, dtype="float32")
+        self.__N = tf.constant(A.shape[0], dtype="float32")
+        self.__proximity = proximity
         if proximity == "Katz":
             self.__proximity_param = tf.constant(kwargs["beta"]) if "beta" in kwargs else tf.constant(0.1)
         elif proximity == "RPR":
             self.__proximity_param = tf.constant(kwargs["alpha"]) if "alpha" in kwargs else tf.constant(0.1)
-
-        self.__Us = None
-        self.__Ut = None
 
     def __proximity_katz(self):
         Mg = tf.eye(self.__N) - self.__proximity_param*self.__A
@@ -67,22 +75,51 @@ class HOPE(Model):
     def info(self) -> str:
         raise NotImplementedError
 
-    def embed(self) -> ndarray:
-        Mg, Ml = self.__get_prox()
-        S = tf.matmul(tf.linalg.inv(Mg), Ml)
-        D, U, VT = tf.linalg.svd(S)
+    def fit(self,
+            d=None):
+        if not self.__keep_SVD:
+            if d is None:
+                raise Exception("The 'd' parameter cannot be None when 'keep_full_SVD' is false")
+            Mg, Ml = self.__get_prox()
+            S = tf.matmul(tf.linalg.inv(Mg), Ml)
+            D, U, VT = tf.linalg.svd(S)
+            Ds = tf.linalg.diag(tf.sqrt(D[:d]))
+            Us = tf.matmul(U[:, :d], Ds)
+            Ut = tf.matmul(tf.transpose(VT)[:, :d], Ds)
+            self.__results = [Us, Ut]
+        else:
+            Mg, Ml = self.__get_prox()
+            S = tf.matmul(tf.linalg.inv(Mg), Ml)
+            D, U, VT = tf.linalg.svd(S)
+            self.__SVDs = (D, U, VT)
 
-        Ds = tf.linalg.diag(tf.sqrt(D[:self.__d]))
-        Us = tf.matmul(U[:, :self.__d], Ds)
-        Ut = tf.matmul(tf.transpose(VT)[:, :self.__d], Ds)
-        self.__Us = Us
-        self.__Ut = Ut
-        return tf.matmul(tf.transpose(Us), Ut).numpy()
+    def embed(self,
+              d=2,
+              concatenated=True):
+        if not self.__keep_SVD:
+            if concatenated:
+                return tf.concat(self.__results, 1).numpy()
+            else:
+                return tf.matmul(tf.transpose(self.__results[0]), self.__results[1]).numpy()
+        D, U, VT = self.__SVDs
+        Ds = tf.linalg.diag(tf.sqrt(D[:d]))
+        Us = tf.matmul(U[:, :d], Ds)
+        Ut = tf.matmul(tf.transpose(VT)[:, :d], Ds)
+        if concatenated:
+            return tf.concat([Us, Ut], 1).numpy()
+        else:
+            return tf.matmul(tf.transpose(Us), Ut).numpy()
 
-    def get_matrices(self):
-        if self.__Us is None or self.__Ut is None:
-            warnings.warn("Embedding before returning the dictionary")
-            self.embed()
-        return {"Us": self.__Us, "Ut": self.__Ut}
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   proximity: str = "Katz",
+                   d: int = 2,
+                   concatenated=True,
+                   **kwargs):
+        hope = HOPE(graph, keep_full_SVD=False)
+        hope.initialize(proximity=proximity,
+                        kwargs=kwargs)
+        hope.fit(d=d)
+        return hope.embed(concatenated=concatenated)
 
 

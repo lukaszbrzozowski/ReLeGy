@@ -8,7 +8,7 @@ class GraRep(Model):
 
     def __init__(self,
                  graph: Graph,
-                 keep_full_SVD: float = True):
+                 keep_full_SVD: bool = True):
 
         super().__init__(graph)
 
