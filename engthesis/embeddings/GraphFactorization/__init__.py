@@ -77,8 +77,8 @@ class GraphFactorization(Model):
         self.__fitted = False
 
     def fit(self,
-              num_epoch: int = 300,
-              verbose: bool = False) -> ndarray:
+              num_iter: int = 300,
+              verbose: bool = True):
 
         if not self.__initialized:
             raise Exception("The methods 'initialize' and 'initialize_model' must be called before fitting")
@@ -87,7 +87,7 @@ class GraphFactorization(Model):
 
         model = self.__model
         optimizer = model.optimizer
-        for i in range(num_epoch):
+        for i in range(num_iter):
             g = self.__get_gradients(model)
             optimizer.apply_gradients(zip(g, model.variables))
             if verbose:
@@ -97,7 +97,7 @@ class GraphFactorization(Model):
         self.__fitted = True
 
 
-    def embed(self):
+    def embed(self) -> ndarray:
         if not self.__initialized:
             raise Exception("The methods 'initialize', 'initialize_model' and 'fit' must be called before embedding")
         if not self.__model_initialized:
@@ -106,6 +106,25 @@ class GraphFactorization(Model):
             raise Exception("The method 'fit' must be called before embedding")
 
         return self.__model(tf.eye(self.__N)).numpy()
+
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   d: int = 2,
+                   lmbd: float = 0.1,
+                   optimizer: str = "adam",
+                   lr: float = 0.1,
+                   init_model_verbose = True,
+                   num_iter: int = 300,
+                   fit_verbose: bool = True):
+        GF = GraphFactorization(graph)
+        GF.initialize(d=d,
+                      lmbd=lmbd)
+        GF.initialize_model(optimizer=optimizer,
+                            lr=lr,
+                            verbose=init_model_verbose)
+        GF.fit(num_iter=num_iter,
+               verbose=fit_verbose)
+        return GF.embed()
 
 
     def get_loss(self):
