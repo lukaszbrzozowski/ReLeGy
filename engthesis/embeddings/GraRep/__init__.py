@@ -2,7 +2,6 @@ from engthesis.model import Model
 from numpy import ndarray, arange
 from networkx import Graph, to_numpy_array
 import tensorflow as tf
-import warnings
 
 class GraRep(Model):
 

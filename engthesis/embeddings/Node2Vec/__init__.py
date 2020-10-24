@@ -1,9 +1,7 @@
-from typing import Any
-
 import numpy as np
-from gensim.models import Word2Vec
-from networkx import to_numpy_matrix, Graph
-from numpy import matrix, ndarray
+from gensim.models import word2vec
+from networkx import to_numpy_array, Graph
+from numpy import ndarray, arange, empty
 
 from engthesis.model import Model
 
@@ -11,96 +9,135 @@ from engthesis.model import Model
 class Node2Vec(Model):
 
     def __init__(self,
-                 graph: Graph,
-                 d: int = 2,
-                 T: int = 40,
-                 window_size: int = 5,
-                 gamma: int = 1,
-                 p: float = 1,
-                 q: float = 1) -> None:
-        """
-        The initialization method of the Node2Vec model.
-        :param graph: The graph to be embedded
-        :param d: dimensionality of the embedding vectors
-        :param T: Length of the random walks
-        :param gamma: Number of times a random walk is started from each vertex
-        :param window_size: Window size for the SkipGram model
-        :param p: Parameter of the biased random walks
-        :param q: Parameter of the biased random walks
-        """
+                 graph: Graph) -> None:
+
         super().__init__(graph)
-        self.__gamma: int = gamma
-        self.__T: int = T
-        self.__window: int = window_size
-        self.__d: int = d
-        self.__p: float = p
-        self.__q: float = q
-
+        self.__N = None
+        self.__A = None
+        self.__T = None
+        self.__gamma = None
+        self.__p = None
+        self.__q = None
+        self.__rw = None
         self.__model = None
+        self.__d = None
 
-    def generate_random_walks(self) -> Any:
-        G = self.get_graph()
-        N: int = len(G.nodes)
-        A: matrix = to_numpy_matrix(G, np.arange(len(G.nodes)))
-        p: float = self.__p
-        q: float = self.__q
-        random_walks: ndarray = np.empty((N * self.__gamma, self.__T))
+    def initialize(self,
+                   T: int = 40,
+                   gamma: int = 1,
+                   p: float = 1,
+                   q: float = 1):
+        graph = self.get_graph()
+        self.__N = len(graph.nodes)
+        self.__A = to_numpy_array(graph, nodelist=arange(self.__N))
+        self.__T = T
+        self.__gamma = gamma
+        self.__p = p
+        self.__q = q
+        self.__rw = self.__generate_random_walks()
+
+    def __generate_random_walks(self):
+        random_walks: ndarray = np.empty((self.__N * self.__gamma, self.__T))
         for i in range(self.__gamma):
             # random_walk_matrix contains random walks for 1 iteration of i
-            random_walk_matrix = np.empty((N, self.__T))
-            vertices = np.arange(N)
+            random_walk_matrix = np.empty((self.__N, self.__T))
+            vertices = np.arange(self.__N)
             random_walk_matrix[:, 0] = vertices
-            probabilities = np.multiply(A, 1 / np.repeat(np.sum(A, axis=1), [N]).reshape(N, N))
+            probabilities = np.multiply(self.__A, 1 / np.repeat(np.sum(self.__A, axis=1), [self.__N])
+                                        .reshape(self.__N, self.__N))
             # generation 2nd step of the random walks with uniform probability
             next_vertices = [np.random.choice(vertices, size=1, p=np.asarray(probabilities[it, :]).reshape(-1))[0]
-                             for it in range(N)]
+                             for it in range(self.__N)]
             random_walk_matrix[:, 1] = next_vertices
             for j in range(2, self.__T):
-                probabilities_mask = np.ones((N, N))
+                probabilities_mask = np.ones((self.__N, self.__N))
                 # generating mask on previous vertices in the random walks
-                mask_p = np.identity(N)[vertices, :]
+                mask_p = np.identity(self.__N)[vertices, :]
                 # generating mask on the vertices which are approachable from current vertices, unapproachable from
                 # previous vertices and are not the previous vertices
-                mask_q = np.logical_and(A[next_vertices, :] > 0,
-                                        np.logical_and(np.logical_and(A @ A > 0, A <= 0),
-                                                       np.logical_not(np.identity(N)))[vertices, :])
+                mask_q = np.logical_and(self.__A[next_vertices, :] > 0,
+                                        np.logical_and(np.logical_and(self.__A @ self.__A > 0, self.__A <= 0),
+                                                       np.logical_not(np.identity(self.__N)))[vertices, :])
                 # modifying probabilities' mask accordingly
-                probabilities_mask = np.where(mask_p, probabilities_mask / p, probabilities_mask)
-                probabilities_mask = np.where(mask_q, probabilities_mask / q, probabilities_mask)
-                probabilities = np.multiply(A[next_vertices, :], probabilities_mask)
+                probabilities_mask = np.where(mask_p, probabilities_mask / self.__p, probabilities_mask)
+                probabilities_mask = np.where(mask_q, probabilities_mask / self.__q, probabilities_mask)
+                probabilities = np.multiply(self.__A[next_vertices, :], probabilities_mask)
                 # normalizing probabilities
                 normalized_probabilities = np.multiply(probabilities, 1 / np.repeat(np.sum(probabilities, axis=1),
-                                                                                    [N]).reshape(N, N))
-                cur_next_vertices = [np.random.choice(np.arange(N), size=1,
+                                                                                    [self.__N])
+                                                       .reshape(self.__N, self.__N))
+                cur_next_vertices = [np.random.choice(np.arange(self.__N), size=1,
                                                       p=np.asarray(normalized_probabilities[it, :]).reshape(-1))[0]
-                                     for it in range(N)]
+                                     for it in range(self.__N)]
                 random_walk_matrix[:, j] = cur_next_vertices
                 vertices, next_vertices = next_vertices, cur_next_vertices
 
-            random_walks[(i * N):((i + 1) * N), :] = random_walk_matrix
+            random_walks[(i * self.__N):((i + 1) * self.__N), :] = random_walk_matrix
 
         return random_walks.astype(int).astype(str).tolist()
 
     def info(self) -> str:
-        return "TBI"
+        raise NotImplementedError
 
-    def embed(self, iter_num=1000, alpha=0.1, min_alpha=0.01, negative=5) -> ndarray:
-        """
-        The main embedding function of the node2vec model
-        :param iter_num: Number of epochs
-        :param alpha: Learning rate
-        :param min_alpha: Minimal value of the learning rate; if defined, alpha decreases linearly
-        :param negative: number of negative samples. If 0, no negative sampling is used
-        :return: Embedding of the graph into R^d
-        """
-        rw = self.generate_random_walks()
-        self.__model = Word2Vec(alpha=alpha, min_alpha=min_alpha,
-                                min_count=0, size=self.__d, window=self.__window, sg=1, hs=0, negative=negative)
-        self.__model.build_vocab(sentences=rw)
-        self.__model.train(sentences=rw, total_examples=len(rw), total_words=len(self.get_graph().nodes),
-                           epochs=iter_num)
-        wv = self.__model.wv
-        Z = np.empty((len(rw) // self.__gamma, self.__d))
-        for i in range(Z.shape[0]):
-            Z[i, :] = wv[str(i)]
-        return Z
+    def initialize_model(self,
+                         d: int = 2,
+                         alpha=0.025,
+                         min_alpha=0.0001,
+                         window=5,
+                         hs=0,
+                         negative=5):
+
+        model = word2vec.Word2Vec(sentences=None,
+                                  size=d,
+                                  min_count=1,
+                                  negative=negative,
+                                  alpha=alpha,
+                                  min_alpha=min_alpha,
+                                  sg=1,
+                                  hs=hs,
+                                  window=window,
+                                  sample=0,
+                                  sorted_vocab=0)
+        self.__model = model
+        self.__model.build_vocab(sentences=self.__rw)
+        self.__d = d
+
+    def fit(self,
+            num_iter=300):
+        self.__model.train(self.__rw,
+                           epochs=num_iter,
+                           total_examples=len(self.__rw))
+
+    def embed(self):
+        ret_matrix = empty((self.__N, self.__d), dtype="float32")
+        for i in arange(self.__N):
+            ret_matrix[i, :] = self.__model.wv[str(i)]
+        return ret_matrix
+
+    @staticmethod
+    def fast_embed(self,
+                   graph: Graph,
+                   T: int = 40,
+                   gamma: int = 1,
+                   p: float = 1,
+                   q: float = 1,
+                   d: int = 2,
+                   alpha: float = 0.025,
+                   min_alpha: float = 0.0001,
+                   window: int = 5,
+                   hs: int = 0,
+                   negative: int = 5,
+                   num_iter = 300):
+        n2v = Node2Vec(graph)
+        n2v.initialize(T=T,
+                       gamma=gamma,
+                       p=p,
+                       q=q)
+        n2v.initialize_model(d=d,
+                             alpha=alpha,
+                             min_alpha=min_alpha,
+                             window=window,
+                             hs=hs,
+                             negative=negative)
+        n2v.fit(num_iter=num_iter)
+        return n2v.embed()
