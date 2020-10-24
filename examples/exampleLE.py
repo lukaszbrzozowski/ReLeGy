@@ -1,18 +1,19 @@
-from engthesis.embeddings.node.laplacianembeddings import LaplacianEmbeddings
+import engthesis.embeddings as emb
 import networkx as nx
-import matplotlib.pyplot as plt
-import numpy as np
-import time
-from tqdm import tqdm
-diffs = np.empty(10)
-for i in tqdm(range(10)):
-    start = time.time()
-    G = nx.random_graphs.barabasi_albert_graph(200, 2)
-    le = LaplacianEmbeddings(G, d=2)
-    Z = le.embed(ftol=1e-8)
-    end = time.time()
-    diffs[i] = end-start
+from time import time
 
-print(np.mean(diffs))
-plt.hist(diffs)
-plt.show()
+G = nx.erdos_renyi_graph(200, 0.1)
+
+start_time = time()
+Z = emb.LaplacianEigenmaps.fast_embed(G)
+finish_time = time()
+print(finish_time-start_time)
+
+
+start_time=time()
+LE = emb.LaplacianEigenmaps(G)
+LE.initialize(d = 2)
+LE.fit(maxiter=200)
+Z = LE.embed()
+finish_time = time()
+print(finish_time-start_time)
