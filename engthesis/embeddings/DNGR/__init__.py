@@ -9,27 +9,66 @@ from engthesis.model import Model
 class DNGR(Model):
 
     def __init__(self,
-                 graph: Graph,
-                 d: int = 2,
-                 alpha: float = 0.9,
-                 T: int = 40,
-                 random_state: int = None):
-        """
-        The initialization method of the DNGR model.
-        :param graph: The graph to be embedded
-        :param d: dimensionality of the embedding vectors
-        :param alpha: probability of continuing the random walk instead of returning to the initial vertex
-        :param T: Length of the random walks
-        """
+                 graph: Graph,):
+
         super().__init__(graph)
-        self.__d: int = d
-        self.__alpha: float = alpha
-        self.__T: int = T
-        self.__model: SDAE = None
-        self.__random_state: int = random_state
+        self.__d = None
+        self.__alpha = None
+        self.__T = None
+        self.__model = None
+        self.__ppmi = None
+        self.__n_layers = None
+        self.__n_hid = None
+        self.__dropout = None
+        self.__enc_act = None
+        self.__dec_act = None
+        self.__bias = None
+        self.__loss_fn = None
+        self.__batch_size = None
+        self.__optimizer = None
+
+    @Model._init_in_init_model_fit
+    def initialize(self,
+                   alpha: float = 0.9,
+                   T: int = 40):
+        self.__alpha = alpha
+        self.__T = T
+
+        rs = self.__random_surf()
+        self.__ppmi = self.__get_ppmi(rs)
+
+    @Model._init_model_in_init_model_fit
+    def initialize_model(self,
+                         d: int = 2,
+                         n_layers: int = 1,
+                         n_hid=None,
+                         dropout: float = 0.05,
+                         enc_act="sigmoid",
+                         dec_act="linear",
+                         bias: bool = True,
+                         loss_fn: str = "mse",
+                         batch_size: int = 32,
+                         optimizer: str = "adam"):
+        self.__d = d
+        if n_hid is None:
+            n_hid = d
+        elif type(n_hid) == int:
+            assert (n_hid == d)
+        else:
+            assert (d == n_hid[-1])
+
+        self.__n_layers = n_layers
+        self.__n_hid = n_hid
+        self.__dropout = dropout
+        self.__enc_act = enc_act
+        self.__dec_act = dec_act
+        self.__bias = bias
+        self.__loss_fn = loss_fn
+        self.__batch_size = batch_size
+        self.__optimizer = optimizer
 
     def info(self) -> str:
-        return "TBI"
+        raise NotImplementedError
 
     def __random_surf(self) -> ndarray:
         A = to_numpy_array(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
@@ -61,24 +100,68 @@ class DNGR(Model):
         PPMI[PPMI < 0] = 0
         return PPMI
 
-    def embed(self, n_layers=1, n_hid=None, dropout=0.05, enc_act='sigmoid', dec_act='linear', bias=True,
-              loss_fn='mse', batch_size=32, nb_epoch=300, optimizer='adam', verbose=1, get_enc_model=True,
-              get_enc_dec_model=False) -> ndarray:
-        if self.__random_state is not None:
-            np.random.seed(self.__random_state)
+    @Model._fit_in_init_model_fit
+    def fit(self,
+            num_iter: int = 300,
+            verbose: bool = True,
+            random_state: int = None):
 
-        if n_hid is None:
-            n_hid = self.__d
-        elif type(n_hid) == int:
-            assert (n_hid == self.__d)
-        else:
-            assert (self.__d == n_hid[-1])
-        M = self.__random_surf()
-        PPMI = self.__get_ppmi(M)
-        sdae = SDAE(n_layers, n_hid, dropout, enc_act, dec_act, bias, loss_fn, batch_size, nb_epoch, optimizer, verbose)
-        final_model, data_in, mse = sdae.get_pretrained_sda(PPMI, get_enc_model, get_enc_dec_model)
+        if random_state is not None:
+            np.random.seed(random_state)
+
+        sdae = SDAE(self.__n_layers,
+                    self.__n_hid,
+                    self.__dropout,
+                    self.__enc_act,
+                    self.__dec_act,
+                    self.__bias,
+                    self.__loss_fn,
+                    self.__batch_size,
+                    num_iter,
+                    self.__optimizer,
+                    verbose)
+
+        final_model, data_in, mse = sdae.get_pretrained_sda(self.__ppmi, True, False)
         self.__model = final_model
-        self.__model.compile(optimizer, loss_fn)
-        Z = self.__model.predict(PPMI)
+        self.__model.compile(self.__optimizer, self.__loss_fn)
 
+    @Model._embed_in_init_model_fit
+    def embed(self) -> ndarray:
+        Z = self.__model.predict(self.__ppmi)
         return Z
+
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   alpha: float = 0.9,
+                   T: int = 40,
+                   d: int = 2,
+                   n_layers: int = 1,
+                   n_hid=None,
+                   dropout: float = 0.05,
+                   enc_act="sigmoid",
+                   dec_act="linear",
+                   bias: bool = True,
+                   loss_fn: str = "mse",
+                   batch_size: int = 32,
+                   optimizer: str = "adam",
+                   num_iter: int = 300,
+                   fit_verbose: bool = True,
+                   random_state: int = None
+                   ) -> ndarray:
+        dngr = DNGR(graph)
+        dngr.initialize(alpha=alpha,
+                        T=T)
+        dngr.initialize_model(d=d,
+                              n_layers=n_layers,
+                              n_hid=n_hid,
+                              dropout=dropout,
+                              enc_act=enc_act,
+                              dec_act=dec_act,
+                              bias=bias,
+                              loss_fn=loss_fn,
+                              batch_size=batch_size,
+                              optimizer=optimizer)
+        dngr.fit(num_iter=num_iter,
+                 verbose=fit_verbose,
+                 random_state=random_state)
+        return dngr.embed()

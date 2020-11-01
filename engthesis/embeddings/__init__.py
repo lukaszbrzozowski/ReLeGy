@@ -8,3 +8,5 @@ from .LINE import LINE
 from .HARP import HARP
 from .Struc2Vec import Struc2Vec
 from .GraphWave import GraphWave
+from .SDNE import SDNE
+from .DNGR import DNGR

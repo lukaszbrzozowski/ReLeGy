@@ -106,7 +106,8 @@ class Model(ABC):
     def _embed_in_init_model_fit(func):
         def wrap(self, *args, **kwargs):
             self._verify_init_and_init_model_and_fit_in_embed()
-            func(self, *args, **kwargs)
+            res = func(self, *args, **kwargs)
+            return res
         return wrap
 
     @abstractmethod
