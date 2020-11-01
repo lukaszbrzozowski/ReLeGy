@@ -20,6 +20,7 @@ class DeepWalk(Model):
         self.__rw = None
         self.__d = None
 
+    @Model._init_in_init_model_fit
     def initialize(self,
                    T: int = 40,
                    gamma: int = 1):
@@ -30,6 +31,7 @@ class DeepWalk(Model):
         self.__gamma = tf.constant(gamma)
         self.__rw = self.__generate_random_walks()
 
+    @Model._init_model_in_init_model_fit
     def initialize_model(self,
                          d: int = 2,
                          alpha: float = 0.025,
@@ -65,16 +67,20 @@ class DeepWalk(Model):
 
     def get_random_walks(self):
         return self.__rw
+
     def info(self) -> str:
         raise NotImplementedError
 
+    @Model._fit_in_init_model_fit
     def fit(self,
             num_iter=300):
+
         self.__model.train(self.__rw,
                            epochs=num_iter,
                            total_examples=len(self.__rw))
 
-    def embed(self):
+    @Model._embed_in_init_model_fit
+    def embed(self) -> ndarray:
         ret_matrix = empty((self.__N, self.__d), dtype="float32")
         for i in arange(self.__N):
             ret_matrix[i, :] = self.__model.wv[str(i)]
@@ -90,7 +96,7 @@ class DeepWalk(Model):
                    window: int = 5,
                    hs: int = 1,
                    negative: int = 0,
-                   num_iter=300):
+                   num_iter=300) -> ndarray:
         dw = DeepWalk(graph)
         dw.initialize(T=T,
                       gamma=gamma)

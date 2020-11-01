@@ -2,7 +2,6 @@ from engthesis.model import Model
 from numpy import ndarray, arange
 from networkx import Graph, to_numpy_array
 import tensorflow as tf
-import warnings
 
 
 class GraphFactorization(Model):
@@ -19,13 +18,10 @@ class GraphFactorization(Model):
 
         super().__init__(graph)
 
-        self.__initialized = False
-        self.__model_initialized = False
-        self.__fitted = False
-
     def info(self) -> str:
         raise NotImplementedError
 
+    @Model._init_in_init_model_fit
     def initialize(self,
                    d: int = 2,
                    lmbd: float = 0.1):
@@ -37,16 +33,12 @@ class GraphFactorization(Model):
         self.__lmbd = tf.constant(lmbd)
         self.__d = tf.constant(d)
 
-        self.__initialized = True
-        self.__model_initialized = False
-        self.__fitted = False
-
     def __get_loss(self, model):
         y_pred = model(tf.eye(self.__N))
-        main_loss = 0.5*tf.reduce_sum(tf.multiply(self.__mask,
-                                                  tf.math.pow(self.__A - tf.matmul(y_pred, tf.transpose(y_pred)), 2)))
-        reg_loss = self.__lmbd/2 * tf.pow(tf.norm(y_pred), 2)
-        return main_loss+reg_loss
+        main_loss = 0.5 * tf.reduce_sum(tf.multiply(self.__mask,
+                                                    tf.math.pow(self.__A - tf.matmul(y_pred, tf.transpose(y_pred)), 2)))
+        reg_loss = self.__lmbd / 2 * tf.pow(tf.norm(y_pred), 2)
+        return main_loss + reg_loss
 
     def __get_gradients(self, model):
         with tf.GradientTape() as tape:
@@ -55,13 +47,11 @@ class GraphFactorization(Model):
         g = tape.gradient(L, model.variables)
         return g
 
+    @Model._init_model_in_init_model_fit
     def initialize_model(self,
-                    optimizer: str = "adam",
-                    lr: float = 0.1,
-                    verbose: bool = False):
-
-        if not self.__initialized:
-            raise Exception("The method 'initialize' must be called before initializing the model")
+                         optimizer: str = "adam",
+                         lr: float = 0.1,
+                         verbose: bool = False):
 
         input_layer = tf.keras.Input(shape=[self.__N],
                                      batch_size=None)
@@ -73,17 +63,10 @@ class GraphFactorization(Model):
         if verbose:
             print("The model has been built")
 
-        self.__model_initialized = True
-        self.__fitted = False
-
+    @Model._fit_in_init_model_fit
     def fit(self,
-              num_iter: int = 300,
-              verbose: bool = True):
-
-        if not self.__initialized:
-            raise Exception("The methods 'initialize' and 'initialize_model' must be called before fitting")
-        if not self.__model_initialized:
-            raise Exception("The method 'initialize_model' must be called before fitting")
+            num_iter: int = 300,
+            verbose: bool = True):
 
         model = self.__model
         optimizer = model.optimizer
@@ -91,20 +74,11 @@ class GraphFactorization(Model):
             g = self.__get_gradients(model)
             optimizer.apply_gradients(zip(g, model.variables))
             if verbose:
-                print("Epoch " + str(i+1) + ": " + str(self.__get_loss(model).numpy()))
+                print("Epoch " + str(i + 1) + ": " + str(self.__get_loss(model).numpy()))
         self.__model = model
 
-        self.__fitted = True
-
-
+    @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
-        if not self.__initialized:
-            raise Exception("The methods 'initialize', 'initialize_model' and 'fit' must be called before embedding")
-        if not self.__model_initialized:
-            raise Exception("The methods 'initialize_model', 'fit' must be called before embedding")
-        if not self.__fitted:
-            raise Exception("The method 'fit' must be called before embedding")
-
         return self.__model(tf.eye(self.__N)).numpy()
 
     @staticmethod
@@ -113,7 +87,7 @@ class GraphFactorization(Model):
                    lmbd: float = 0.1,
                    optimizer: str = "adam",
                    lr: float = 0.1,
-                   init_model_verbose = True,
+                   init_model_verbose=True,
                    num_iter: int = 300,
                    fit_verbose: bool = True):
         GF = GraphFactorization(graph)
@@ -126,14 +100,11 @@ class GraphFactorization(Model):
                verbose=fit_verbose)
         return GF.embed()
 
-
     def get_loss(self):
-        if not self.__initialized:
-            raise Exception("The methods 'initialize' and 'initialize_model' must be called before evaluating the model")
-        if not self.__model_initialized:
+        if not self._initialized:
+            raise Exception(
+                "The methods 'initialize' and 'initialize_model' must be called before evaluating the model")
+        if not self._initialized_model:
             raise Exception("The method 'initialize_model' must be called before evaluating the model")
 
         return self.__get_loss(self.__model)
-
-
-

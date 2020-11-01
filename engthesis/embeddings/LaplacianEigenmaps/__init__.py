@@ -22,9 +22,7 @@ class LaplacianEigenmaps(Model):
         self.__eq_cons = None
         self.__result = None
 
-        self.__initialized = False
-        self.__fitted = False
-
+    @Model._init_in_init_fit
     def initialize(self,
                    d: int = 2):
         self.__d = d
@@ -45,26 +43,21 @@ class LaplacianEigenmaps(Model):
                                                                            lambda Y: np.sum((Y.T @ D @ Y - Id) ** 2)),
                                                                        "jac": self.__flat(lambda Y: 2 * D @ Y)}
 
-        self.__initialized = True
-        self.__fitted = False
-
     def info(self) -> str:
         raise NotImplementedError
 
+    @Model._fit_in_init_fit
     def fit(self,
             ftol: float = 1e-7,
             verbose: bool = True,
             num_iter: int = 200):
         """
-        The embedding method of the Laplacian Eigenmaps.
+        The fitting method of the Laplacian Eigenmaps. Minimizes the loss function using scipy.minimizes
         :param ftol: Precision parameter of the optimisation process. Default 1e-7
         :param verbose: Whether to print optimisation results after the embedding
-        :param maxiter: Maximal number of iterations of the optimisation process
+        :param num_iter: Maximal number of iterations of the optimisation process
         :return: The graph embedding in R^d
         """
-
-        if not self.__initialized:
-            raise Exception("The method 'initialize' must be called before fitting")
 
         res = minimize(self.__flat(self.__func),
                        self.__Y0,
@@ -74,13 +67,10 @@ class LaplacianEigenmaps(Model):
                        options={'ftol': ftol, 'disp': verbose, 'maxiter': num_iter})
 
         self.__result = res.x.reshape(-1, self.__d)
-        self.__fitted = True
 
+    @Model._embed_in_init_fit
     def embed(self) -> np.ndarray:
-        if not self.__initialized:
-            raise Exception("The methods 'initialize' and 'fit' must be called before embedding")
-        if not self.__fitted:
-            raise Exception("The method 'fit' must be called before embedding")
+
         return self.__result
 
     @staticmethod

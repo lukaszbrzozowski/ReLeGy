@@ -19,6 +19,7 @@ class GraphWave(Model):
         self.__thetas = None
         self.__Z = None
 
+    @Model._init_in_init_fit
     def initialize(self,
                    J: int = 1,
                    eta: float = 0.85,
@@ -34,6 +35,7 @@ class GraphWave(Model):
         self.__kernel = kernel
         self.__thetas = tf.cast(self.__calculate_theta(), "complex64")
 
+    @Model._fit_in_init_fit
     def fit(self,
             d: int = 2,
             interval_start: float = 0,
@@ -51,6 +53,7 @@ class GraphWave(Model):
                 Z[:, 2*iter_j*d+2*iter_i+1] = tf.math.imag(phi)
         self.__Z = Z
 
+    @Model._embed_in_init_fit
     def embed(self):
         return self.__Z
 

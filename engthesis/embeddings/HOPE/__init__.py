@@ -4,7 +4,6 @@ from numpy import arange
 import tensorflow as tf
 
 
-
 class HOPE(Model):
 
     def __init__(self,
@@ -22,6 +21,7 @@ class HOPE(Model):
         self.__SVDs = None
         self.__results = None
 
+    @Model._init_in_init_fit
     def initialize(self,
                    proximity: str = "Katz",
                    **kwargs):
@@ -75,8 +75,10 @@ class HOPE(Model):
     def info(self) -> str:
         raise NotImplementedError
 
+    @Model._fit_in_init_fit
     def fit(self,
             d=None):
+
         if not self.__keep_SVD:
             if d is None:
                 raise Exception("The 'd' parameter cannot be None when 'keep_full_SVD' is false")
@@ -93,6 +95,7 @@ class HOPE(Model):
             D, U, VT = tf.linalg.svd(S)
             self.__SVDs = (D, U, VT)
 
+    @Model._embed_in_init_fit
     def embed(self,
               d=2,
               concatenated=True):

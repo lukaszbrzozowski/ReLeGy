@@ -18,7 +18,14 @@ class LINE(Model):
         self.__U1 = None
         self.__U2 = None
         self.__Z = None
+        self.__E = None
+        self.__o1 = None
+        self.__o2 = None
+        self.__Frob = None
+        self.__grad1 = None
+        self.__grad2 = None
 
+    @Model._init_in_init_model_fit
     def initialize(self,
                    d: int = 2,
                    **kwargs):
@@ -40,6 +47,8 @@ class LINE(Model):
                     self.__U2[j, :] * np.exp(np.dot(self.__U2[i, :], self.__U2[j, :])) * np.sum(
                 self.__U2 @ self.__U2[j, :]) - np.exp(np.dot(self.__U2[i, :], self.__U2[j, :])) * self.__U2[j, :]) / (
                                  np.sum(self.__U2 @ self.__U2[j, :])) ** 2
+
+    @Model._init_model_in_init_model_fit
     def initialize_model(self,
                          batch_size: int = 30,
                          lmbd1: float = 1e-1,
@@ -52,6 +61,7 @@ class LINE(Model):
         self.__lr1 = lr1
         self.__lr2 = lr2
 
+    @Model._fit_in_init_model_fit
     def fit(self,
             num_iter: int = 400,
             verbose: bool = True):
@@ -77,6 +87,7 @@ class LINE(Model):
                       f"2nd-order Frob:{self.__Frob(self.__U2):.2f}",
                       end="\r")
 
+    @Model._embed_in_init_model_fit
     def embed(self):
         return np.c_[self.__U1, self.__U2]
 

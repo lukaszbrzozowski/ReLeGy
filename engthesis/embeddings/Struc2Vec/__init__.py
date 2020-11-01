@@ -24,6 +24,7 @@ class Struc2Vec(Model):
         self.__N = None
         self.__rw = None
 
+    @Model._init_in_init_model_fit
     def initialize(self,
                    T: int = 40,
                    gamma: int = 1,
@@ -45,10 +46,11 @@ class Struc2Vec(Model):
         w_in, w_f = self.__generate_multigraph_edges(matrix_dict)
         self.__rw = self.__generate_random_walks(w_in, w_f)
 
+    @Model._init_model_in_init_model_fit
     def initialize_model(self,
                          d: int = 2,
                          alpha: float = 0.025,
-                         min_alpha: float =0.0001,
+                         min_alpha: float = 0.0001,
                          window: int = 5,
                          hs: int = 1,
                          negative: int = 0):
@@ -180,11 +182,13 @@ class Struc2Vec(Model):
             i += 1
         return weight_matrix
 
+    @Model._fit_in_init_model_fit
     def fit(self, num_iter=1000):
         self.__model.train(sentences=self.__rw,
                            total_examples=len(self.__rw),
                            epochs=num_iter)
 
+    @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
         return self.__get_weights_from_model()
 

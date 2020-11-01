@@ -1,7 +1,8 @@
 from engthesis.model import Model
-from numpy import ndarray, arange
+from numpy import arange
 from networkx import Graph, to_numpy_array
 import tensorflow as tf
+
 
 class GraRep(Model):
 
@@ -24,10 +25,9 @@ class GraRep(Model):
         self.__SVDs = []
         self.__results = []
 
-        self.__initialized = False
-        self.__fitted = False
         self.__max_K = 0
 
+    @Model._init_in_init_fit
     def initialize(self,
                    lmbd: float = 1):
 
@@ -40,10 +40,7 @@ class GraRep(Model):
         self.__S = tf.matmul(self.__D, self.__A)
         self.__S_cur = tf.eye(self.__N, dtype="float32")
 
-        self.__initialized = True
-        self.__fitted = False
-
-
+    @Model._fit_in_init_fit
     def fit(self,
             max_K=1,
             d=None):
@@ -78,6 +75,7 @@ class GraRep(Model):
                     D, U, VT = tf.linalg.svd(X)
                     self.__SVDs.append((D, U, VT))
 
+    @Model._embed_in_init_fit
     def embed(self,
               K=1,
               d=2,

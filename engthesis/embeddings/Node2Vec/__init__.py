@@ -22,6 +22,7 @@ class Node2Vec(Model):
         self.__model = None
         self.__d = None
 
+    @Model._init_in_init_model_fit
     def initialize(self,
                    T: int = 40,
                    gamma: int = 1,
@@ -82,6 +83,7 @@ class Node2Vec(Model):
     def info(self) -> str:
         raise NotImplementedError
 
+    @Model._init_model_in_init_model_fit
     def initialize_model(self,
                          d: int = 2,
                          alpha=0.025,
@@ -105,12 +107,14 @@ class Node2Vec(Model):
         self.__model.build_vocab(sentences=self.__rw)
         self.__d = d
 
+    @Model._fit_in_init_model_fit
     def fit(self,
             num_iter=300):
         self.__model.train(self.__rw,
                            epochs=num_iter,
                            total_examples=len(self.__rw))
 
+    @Model._embed_in_init_model_fit
     def embed(self):
         ret_matrix = empty((self.__N, self.__d), dtype="float32")
         for i in arange(self.__N):
@@ -118,8 +122,7 @@ class Node2Vec(Model):
         return ret_matrix
 
     @staticmethod
-    def fast_embed(self,
-                   graph: Graph,
+    def fast_embed(graph: Graph,
                    T: int = 40,
                    gamma: int = 1,
                    p: float = 1,
@@ -130,7 +133,7 @@ class Node2Vec(Model):
                    window: int = 5,
                    hs: int = 0,
                    negative: int = 5,
-                   num_iter = 300):
+                   num_iter: int = 300):
         n2v = Node2Vec(graph)
         n2v.initialize(T=T,
                        gamma=gamma,

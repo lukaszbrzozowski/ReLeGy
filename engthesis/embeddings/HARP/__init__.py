@@ -28,6 +28,14 @@ class HARP(Model):
 
         self.__model = None
 
+        self.__d = None
+        self.__alpha = None
+        self.__min_alpha = None
+        self.__hs = None
+        self.__negative = None
+        self.__window = None
+
+    @Model._init_in_init_model_fit
     def initialize(self,
                    method: str = "DeepWalk",
                    threshold: int = 100,
@@ -52,6 +60,7 @@ class HARP(Model):
 
         self.__graph_stack, self.__transition_matrix = self.generate_collapsed_graphs()
 
+    @Model._init_model_in_init_model_fit
     def initialize_model(self,
                          d: int = 2,
                          alpha: float = 0.025,
@@ -231,8 +240,9 @@ class HARP(Model):
             assert (word in wv.vocab)
             wv.syn0[wv.vocab[word].index] = row[1:]
 
+    @Model._fit_in_init_model_fit
     def fit(self,
-            num_iter=1000) -> ndarray:
+            num_iter=1000):
         graph_stack, transition_matrix = self.__graph_stack, self.__transition_matrix
 
         last_graph = graph_stack.pop()  # We treat the last created graph separately,
@@ -286,8 +296,12 @@ class HARP(Model):
                 tr_matrix = transition_matrix[:, (i - 1):(i + 1)]
                 new_wm = self.__generate_new_weights(weight_matrix, tr_matrix)
 
+    @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
-        return self.__get_weights_from_model()[:, 1:]
+        ret_matrix = np.empty((self.__N, self.__d), dtype="float32")
+        for i in np.arange(self.__N):
+            ret_matrix[i, :] = self.__model.wv[str(i)]
+        return ret_matrix
 
     @staticmethod
     def fast_embed(graph: Graph,
