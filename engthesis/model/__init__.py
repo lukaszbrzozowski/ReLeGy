@@ -107,6 +107,7 @@ class Model(ABC):
         def wrap(self, *args, **kwargs):
             self._verify_init_and_init_model_and_fit_in_embed()
             func(self, *args, **kwargs)
+        return wrap
 
     @abstractmethod
     def embed(self) -> ndarray: pass
