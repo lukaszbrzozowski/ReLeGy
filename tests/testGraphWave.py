@@ -7,6 +7,13 @@ def test_graph_wave_fast_embeds_without_error():
         Z = GraphWave.fast_embed(graph)
         assert isinstance(Z, np.ndarray)
 
+def test_graph_wave_result_has_expected_shape():
+    for graph in examplesDict.values():
+        d = 4
+        Z = GraphWave.fast_embed(graph, d=d)
+        n = len(graph.nodes)
+        assert Z.shape == (n, 2*d)
+
 # def test_graph_wave_consistent_embedding_with_identical_random_state():
 #     for graph in examplesDict.values():
 #         model1 = GraphWave(graph, random_state=2137)

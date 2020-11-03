@@ -7,6 +7,13 @@ def test_line_fast_embeds_without_error():
         Z = LINE.fast_embed(graph)
         assert isinstance(Z, np.ndarray)
 
+def test_line_result_has_expected_shape():
+    for graph in examplesDict.values():
+        d = 4
+        Z = LINE.fast_embed(graph, d=d)
+        n = len(graph.nodes)
+        assert Z.shape == (n, 2*d)
+
 # def test_line_consistent_embedding_with_identical_random_state():
 #     for graph in examplesDict.values():
 #         model1 = LINE(graph, random_state=2137)

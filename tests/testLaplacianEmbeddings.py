@@ -7,6 +7,13 @@ def test_laplacian_eigenmaps_fast_embeds_without_error():
         Z = LaplacianEigenmaps.fast_embed(graph)
         assert isinstance(Z, np.ndarray)
 
+def test_laplacian_eigenmaps_result_has_expected_shape():
+    for graph in examplesDict.values():
+        d = 4
+        Z = LaplacianEigenmaps.fast_embed(graph, d=d)
+        n = len(graph.nodes)
+        assert Z.shape == (n, d)
+
 # def test_laplacian_eigenmaps_consistent_embedding_with_identical_random_state():
 #     for graph in examplesDict.values():
 #         model1 = LaplacianEigenmaps(graph, random_state=2137)
