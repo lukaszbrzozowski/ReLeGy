@@ -1,10 +1,8 @@
-from engthesis.embeddings.node.harp import HARP
+import engthesis.embeddings as emb
 import numpy as np
 import networkx as nx
 
-G = nx.random_graphs.barabasi_albert_graph(1000, 2)
-harp = HARP(G, T=40, threshold=100)
-harp.embed()
-
-harp = HARP(G, )
+G = nx.erdos_renyi_graph(200, 0.1)
+Z = emb.HARP.fast_embed(G)
+print(Z.shape)
 

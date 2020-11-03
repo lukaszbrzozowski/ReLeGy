@@ -1,14 +1,11 @@
-import numpy as np
 import networkx as nx
-import matplotlib.pyplot as plt
-from engthesis.embeddings.node.node2vec import Node2Vec
+import engthesis.embeddings as emb
 
-np.random.seed(123)
-G = nx.random_graphs.erdos_renyi_graph(10, 0.4)
-nx.draw(G, with_labels=True)
-plt.show()
+G = nx.erdos_renyi_graph(200, 0.1)
 
-n2v = Node2Vec(G, d=2, p=10, q=0.01, gamma=2, T=4)
-Z = n2v.embed(iter_num=1000, negative=0)
-plt.scatter(Z[:, 0], Z[:, 1])
-plt.show()
+n2v = emb.Node2Vec(G)
+n2v.initialize()
+n2v.initialize_model(d = 5)
+n2v.fit()
+Z = n2v.embed()
+print(Z.shape)

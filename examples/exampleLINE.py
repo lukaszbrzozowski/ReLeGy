@@ -1,7 +1,13 @@
 import networkx as nx
+import engthesis.embeddings as emb
 
-from engthesis.embeddings.node.line import LINE
+G = nx.erdos_renyi_graph(200, 0.1)
 
-G = nx.random_graphs.erdos_renyi_graph(30, 0.2)
-L = LINE(G, epochs=1000, alpha1=5e-1, alpha2=1e-3, lmbd1 = 1e-2, lmbd2=1e-3, verbose = True)
-Z = L.embed()
+line = emb.LINE(G)
+line.initialize()
+line.initialize_model()
+line.fit()
+Z = line.embed()
+
+Z = emb.LINE.fast_embed(G, d=20)
+print(Z.shape)

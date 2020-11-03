@@ -1,15 +1,15 @@
-from engthesis.embeddings import HOPE
+from engthesis.embeddings import SDNE
 from engthesis.graphs.examples import examplesDict
 import numpy as np
 
-def test_hope_fast_embeds_without_error():
+def test_sdne_fast_embeds_without_error():
     for graph in examplesDict.values():
-        Z = HOPE.fast_embed(graph)
+        Z = SDNE.fast_embed(graph)
         assert isinstance(Z, np.ndarray)
 
-def test_hope_result_has_expected_shape():
+def test_sdne_result_has_expected_shape():
     for graph in examplesDict.values():
         d = 4
-        Z = HOPE.fast_embed(graph, d=d)
+        Z = SDNE.fast_embed(graph, d=d)
         n = len(graph.nodes)
-        assert Z.shape == (n, 2*d)
+        assert Z.shape == (n, d)

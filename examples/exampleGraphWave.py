@@ -1,7 +1,7 @@
+import engthesis.embeddings as emb
 import numpy as np
 import matplotlib.pyplot as plt
 import networkx as nx
-from engthesis.embeddings.node.graphwave import GraphWave
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
@@ -22,7 +22,12 @@ plt.show()
 
 nx.draw(bg, with_labels=True, node_color=color_map)
 plt.show()
-gw = GraphWave(bg, 20, J=3, interval_stop=2*np.pi, interval_start=0)
+gw = emb.GraphWave(bg)
+gw.initialize(J=3)
+gw.fit(interval_start=0,
+       interval_stop=2*np.pi,
+       d=20)
+
 Z = gw.embed()
 print(Z.shape)
 Z = StandardScaler().fit_transform(Z)
