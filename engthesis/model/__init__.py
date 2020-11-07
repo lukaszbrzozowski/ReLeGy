@@ -116,4 +116,8 @@ class Model(ABC):
     @abstractmethod
     def info(self): pass
 
+    @staticmethod
+    @abstractmethod
+    def fast_embed(graph: Graph) -> ndarray: pass
+
     def get_graph(self) -> Graph: return self.__graph

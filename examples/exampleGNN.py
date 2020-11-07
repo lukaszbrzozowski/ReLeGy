@@ -1,4 +1,4 @@
-from engthesis.embeddings.node.GNN import GNN
+from engthesis.embeddings.GNN import GNN
 import engthesis.helpers.gnn_utils as utils
 import tensorflow.compat.v1 as tf
 import networkx as nx
@@ -24,7 +24,7 @@ learning_rate = 0.001
 state_dim = 3
 tf.reset_default_graph()
 max_it = 50
-num_epoch = 10000
+num_epoch = 1000
 optimizer = tf.train.AdamOptimizer
 
 # initialize GNN
@@ -33,8 +33,16 @@ print(param)
 
 tensorboard = False
 
-g = GNN(graph, labels, state_dim, max_it=max_it, optimizer=optimizer, learning_rate=learning_rate, threshold=threshold, graph_based=False, param=param, config=config,
-            tensorboard=tensorboard, mask_flag=True)
+result = GNN.fast_embed(graph, labels,
+                        embed_dim=state_dim,
+                        num_epoch=num_epoch,
+                        threshold=threshold,
+                        learning_rate=learning_rate,
+                        max_it=max_it,
+                        graph_based=False,
+                        param=param,
+                        config=config,
+                        optimizer=optimizer)
 
-result = g.embed()
 print(result.shape)
+print(result)

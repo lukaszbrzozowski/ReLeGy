@@ -61,8 +61,7 @@ def from_EN_to_GNN(E, N):
 
 
 def from_nx_to_GNN(graph: nx.Graph, idx_labels: list):
-    n = len(graph.nodes)
-    edges = np.array(list(graph.edges)) # node indices from 0 to |G|-1
+    edges = np.array(list(graph.edges))  # node indices from 0 to |G|-1
     edges = edges[np.lexsort((edges[:, 1], edges[:, 0]))]  # reorder list of edges also by second column
     features = sp.eye(np.max(edges + 1), dtype=np.float32).tocsr()
 
@@ -71,19 +70,15 @@ def from_nx_to_GNN(graph: nx.Graph, idx_labels: list):
     E = np.concatenate((edges, np.zeros((len(edges), 1), dtype=np.int32)), axis=1)
     N = np.concatenate((features.toarray(), np.zeros((features.shape[0], 1), dtype=np.int32)), axis=1)
 
-    mask_test = np.zeros(shape=(n,), dtype=np.float32())
-    mask_test[np.random.choice(np.arange(n), size = n//10, replace=False)] = 1
-
-    mask_train = 1.0 - mask_test
-
     inp, arcnode, graphnode = from_EN_to_GNN(E, N)
 
-    return inp, arcnode, graphnode, labels, mask_test, mask_train
+    return inp, arcnode, graphnode, labels
+
 
 # class for the core of the architecture
 class GNN(Model):
-    def __init__(self, graph: nx.Graph, idx_labels, embed_dim, mask_train=None, mask_test=None, num_epoch=100, max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
-                 param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False, mask_flag=False):
+
+    def __init__(self, graph: nx.Graph):
         """
                create GNN instance. Feed this parameters:
                :net:  Net instance - it contains state network, output network, initialized weights, loss function and metric;
@@ -99,35 +94,72 @@ class GNN(Model):
                :config: ConfigProto protocol buffer object, to set configuration options for a session
                :tensorboard:  boolean flag to activate tensorboard
                """
-
-        np.random.seed(0)
-        tf.set_random_seed(0)
-
         super().__init__(graph)
+        self.inp = None
+        self.arcnode = None
+        self.graphnode = None
+        self.labels = None
+        self.mask_test = None
+        self.mask_train = None
+        self.input_dim = None
+        self.output_dim = None
+        self.state_dim = None
+        self.tensorboard = None
+        self.max_iter = None
+        self.num_epoch = None
+        self.net = None
+        self.optimizer = None
+        self.state_threshold = None
+        self.graph_based = None
+        self.mask_flag = None
 
-        inp, arcnode, graphnode, labels, mask_test, mask_train = from_nx_to_GNN(graph, idx_labels)
+        self.session = None
+
+    @Model._init_in_init_model_fit
+    def initialize(self, idx_labels):
+
+        inp, arcnode, graphnode, labels = from_nx_to_GNN(self.get_graph(), idx_labels)
 
         self.inp = inp
         self.arcnode = arcnode
         self.graphnode = graphnode
         self.labels = labels
-        self.mask_test = mask_test
-        self.mask_train = mask_train
+
+
+    @Model._init_model_in_init_model_fit
+    def initialize_model(self, embed_dim=4,
+                   max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
+                   param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False,
+                   mask_flag=True, mask_test=None, mask_train=None):
+
         self.input_dim = self.inp.shape[1]
         self.output_dim = self.labels.shape[1]
         self.state_dim = embed_dim
         self.tensorboard = tensorboard
         self.max_iter = max_it
-        self.num_epoch = num_epoch
         self.net = Net(self.input_dim, self.state_dim, self.output_dim)
         self.optimizer = optimizer(learning_rate, name="optim")
         self.state_threshold = threshold
         self.graph_based = graph_based
         self.mask_flag = mask_flag
-        self.build()
+
+        n = len(self.get_graph().nodes)
+
+        if mask_test is None:
+            self.mask_test = np.zeros(shape=(n,), dtype=np.float32())
+            self.mask_test[np.random.choice(np.arange(n), size=n // 10, replace=False)] = 1
+        else:
+            self.mask_test = mask_test
+
+        if mask_train is None:
+            self.mask_train = 1.0 - self.mask_test
+        else:
+            self.mask_train = mask_train
+
+        self.__build()
 
         self.session = tf.Session(config=config)
-        #self.session = tf.Session()
+        # self.session = tf.Session()
         self.session.run(tf.global_variables_initializer())
         self.init_l = tf.local_variables_initializer()
 
@@ -140,7 +172,45 @@ class GNN(Model):
         # self.saver = tf.train.Saver()
         # self.save_path = "tmp/" + param + "saves/model.ckpt"
 
-    def variableState(self):
+    @Model._fit_in_init_model_fit
+    def fit(self, num_epoch=100):
+        # train the model
+        count = 0
+
+        ######
+
+        for j in range(0, num_epoch):
+            _, it = self.__train(inputs=self.inp, ArcNode=self.arcnode, target=self.labels, step=count,
+                                 mask=self.mask_train)
+
+            if count % 10 == 0:
+                print("Epoch ", count)
+                print("Training: ", self.__validate(self.inp, self.arcnode, self.labels, count, mask=self.mask_train))
+                print("Test: ", self.__validate(self.inp, self.arcnode, self.labels, count, mask=self.mask_test))
+
+                # end = time.time()
+                # print("Epoch {} at time {}".format(j, end-start))
+                # start = time.time()
+
+            count = count + 1
+
+    @Model._embed_in_init_model_fit
+    def embed(self):
+
+        return self.__predict(self.inp, self.arcnode, self.labels)[2]
+
+    @staticmethod
+    def fast_embed(graph: nx.Graph, idx_labels, embed_dim=4,
+                   max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
+                   param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False,
+                   mask_flag=True, mask_train=None, mask_test=None, num_epoch=100):
+        gnn = GNN(graph)
+        gnn.initialize(idx_labels)
+        gnn.initialize_model(embed_dim, max_it, optimizer, learning_rate, threshold, graph_based, param, config, tensorboard, mask_flag, mask_train, mask_test)
+        gnn.fit(num_epoch)
+        return gnn.embed()
+
+    def __variableState(self):
         '''Define placeholders for input, output, state, state_old, arch-node conversion matrix'''
         # placeholder for input and output
 
@@ -163,11 +233,11 @@ class GNN(Model):
         else:
             self.NodeGraph = tf.placeholder(tf.float32, name="NodeGraph")
 
-    def build(self):
+    def __build(self):
         '''build the architecture, setting variable, loss, training'''
         # network
-        self.variableState()
-        self.loss_op = self.loop()
+        self.__variableState()
+        self.loss_op = self.__loop()
 
         # loss
         with tf.variable_scope('loss'):
@@ -208,7 +278,7 @@ class GNN(Model):
             if self.tensorboard:
                 self.summ_val_met = tf.summary.scalar('val_metric', self.val_met, collections=['always'])
 
-    def convergence(self, a, state, old_state, k):
+    def __convergence(self, a, state, old_state, k):
         with tf.variable_scope('Convergence'):
             # body of the while cicle used to iteratively calculate state
 
@@ -234,7 +304,7 @@ class GNN(Model):
             k = k + 1
         return a, state, old_state, k
 
-    def condition(self, a, state, old_state, k):
+    def __condition(self, a, state, old_state, k):
         # evaluate condition on the convergence of the state
         with tf.variable_scope('condition'):
             # evaluate distance by state(t) and state(t-1)
@@ -247,12 +317,12 @@ class GNN(Model):
 
         return tf.logical_and(c1, c2)
 
-    def loop(self):
+    def __loop(self):
         # call to loop for the state computation and compute the output
         # compute state
         with tf.variable_scope('Loop'):
             k = tf.constant(0)
-            res, st, old_st, num = tf.while_loop(self.condition, self.convergence,
+            res, st, old_st, num = tf.while_loop(self.__condition, self.__convergence,
                                                  [self.comp_inp, self.state, self.state_old, k])
             if self.tensorboard:
                 self.summ_iter = tf.summary.scalar('iteration', num, collections=['always'])
@@ -267,7 +337,7 @@ class GNN(Model):
 
         return out, num, stf
 
-    def Train(self, inputs, ArcNode, target, step, nodegraph=0.0, mask=None):
+    def __train(self, inputs, ArcNode, target, step, nodegraph=0.0, mask=None):
         ''' train methods: has to receive the inputs, arch-node matrix conversion, target,
         and optionally nodegraph indicator '''
 
@@ -276,7 +346,7 @@ class GNN(Model):
                                         dense_shape=ArcNode.dense_shape)
         if self.graph_based:
             nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
-                                        dense_shape=nodegraph.dense_shape)
+                                             dense_shape=nodegraph.dense_shape)
 
         if self.mask_flag:
             fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs,
@@ -285,7 +355,8 @@ class GNN(Model):
                   self.ArcNode: arcnode_, self.y: target, self.mask: mask}
         else:
 
-            fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+            fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs,
+                  self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
                   self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
                   self.ArcNode: arcnode_, self.y: target}
         if self.tensorboard:
@@ -302,7 +373,7 @@ class GNN(Model):
 
         return loss, loop[1]
 
-    def Validate(self, inptVal, arcnodeVal, targetVal, step, nodegraph=0.0, mask=None):
+    def __validate(self, inptVal, arcnodeVal, targetVal, step, nodegraph=0.0, mask=None):
         """ Takes care of the validation of the model - it outputs, regarding the set given as input,
          the loss value, the accuracy (custom defined in the Net file), the number of iteration
          in the convergence procedure """
@@ -311,7 +382,7 @@ class GNN(Model):
                                         dense_shape=arcnodeVal.dense_shape)
         if self.graph_based:
             nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
-                                        dense_shape=nodegraph.dense_shape)
+                                             dense_shape=nodegraph.dense_shape)
 
         if self.mask_flag:
             fd_val = {self.NodeGraph: nodegraph, self.comp_inp: inptVal,
@@ -338,7 +409,7 @@ class GNN(Model):
                 [self.val_loss, self.loss_op, self.metrics], feed_dict=fd_val)
         return loss_val, metr, loop[1]
 
-    def Evaluate(self, inputs, st, st_old, ArcNode, target):
+    def __evaluate(self, inputs, st, st_old, ArcNode, target):
         '''evaluate method with initialized state -- not used for the moment: has to receive the inputs,
         initialization for state(t) and state(t-1),
         arch-node matrix conversion, target -- gives as output the accuracy on the set given as input'''
@@ -352,7 +423,7 @@ class GNN(Model):
         met = self.session.run([self.metrics], feed_dict=fd)
         return met
 
-    def Evaluate(self, inputs, ArcNode, target, nodegraph=0.0):
+    def __evaluate(self, inputs, ArcNode, target, nodegraph=0.0):
         '''evaluate methods: has to receive the inputs,  arch-node matrix conversion, target
          -- gives as output the accuracy on the set given as input'''
 
@@ -360,17 +431,17 @@ class GNN(Model):
                                         dense_shape=ArcNode.dense_shape)
         if self.graph_based:
             nodegraph = tf.SparseTensorValue(indices=nodegraph.indices, values=nodegraph.values,
-                                        dense_shape=nodegraph.dense_shape)
+                                             dense_shape=nodegraph.dense_shape)
 
-
-        fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs, self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
+        fd = {self.NodeGraph: nodegraph, self.comp_inp: inputs,
+              self.state: np.zeros((ArcNode.dense_shape[0], self.state_dim)),
               self.state_old: np.ones((ArcNode.dense_shape[0], self.state_dim)),
               self.ArcNode: arcnode_, self.y: target}
         _ = self.session.run([self.init_l])
         met = self.session.run([self.metrics], feed_dict=fd)
         return met
 
-    def Predict(self, inputs, st, st_old, ArcNode):
+    def __predict(self, inputs, st, st_old, ArcNode):
         ''' predict methods with initialized state -- not used for the moment:: has to receive the inputs,
          initialization for state(t) and state(t-1),
          arch-node matrix conversion -- gives as output the output values of the output function (all the nodes output
@@ -383,7 +454,7 @@ class GNN(Model):
         pr = self.session.run([self.loss_op], feed_dict=fd)
         return pr[0]
 
-    def Predict(self, inputs, ArcNode, nodegraph=0.0):
+    def __predict(self, inputs, ArcNode, nodegraph=0.0):
         ''' predict methods: has to receive the inputs, arch-node matrix conversion -- gives as output the output
          values of the output function (all the nodes output
          for all the graphs (if node-based) or a single output for each graph (if graph based) '''
@@ -396,30 +467,9 @@ class GNN(Model):
         pr = self.session.run([self.loss_op], feed_dict=fd)
         return pr[0]
 
-    def embed(self):
-        # train the model
-        count = 0
-
-        ######
-
-        for j in range(0, self.num_epoch):
-            _, it = self.Train(inputs=self.inp, ArcNode=self.arcnode, target=self.labels, step=count, mask=self.mask_train)
-
-            if count % 10 == 0:
-                print("Epoch ", count)
-                print("Training: ", self.Validate(self.inp, self.arcnode, self.labels, count, mask=self.mask_train))
-                print("Test: ", self.Validate(self.inp, self.arcnode, self.labels, count, mask=self.mask_test))
-
-                # end = time.time()
-                # print("Epoch {} at time {}".format(j, end-start))
-                # start = time.time()
-
-            count = count + 1
-
-        return self.Predict(self.inp, self.arcnode, self.labels)[2]
-
     def info(self):
         pass
+
 
 class Net:
     # class to define state and output network
@@ -443,22 +493,20 @@ class Net:
 
     def netSt(self, inp):
         with tf.variable_scope('State_net'):
-
             layer1 = tf.layers.dense(inp, self.state_l1, activation=tf.nn.tanh)
             layer2 = tf.layers.dense(layer1, self.state_l2, activation=tf.nn.tanh)
 
             return layer2
 
     def netOut(self, inp):
+        layer1 = tf.layers.dense(inp, self.output_l1, activation=tf.nn.tanh)
+        layer2 = tf.layers.dense(layer1, self.output_l2, activation=tf.nn.softmax)
 
-            layer1 = tf.layers.dense(inp, self.output_l1, activation=tf.nn.tanh)
-            layer2 = tf.layers.dense(layer1, self.output_l2, activation=tf.nn.softmax)
-
-            return layer2
+        return layer2
 
     def Loss(self, output, target, output_weight=None, mask=None):
         # method to define the loss function
-        #lo = tf.losses.softmax_cross_entropy(target, output)
+        # lo = tf.losses.softmax_cross_entropy(target, output)
         output = tf.maximum(output, self.EPSILON, name="Avoiding_explosions")  # to avoid explosions
         xent = -tf.reduce_sum(target * tf.log(output), 1)
 
