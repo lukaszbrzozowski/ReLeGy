@@ -1,5 +1,5 @@
 from relegy.__base import Model
-from relegy.metrics import metrics as met
+import relegy.metrics as met
 from networkx import Graph
 import networkx as nx
 import tensorflow as tf
