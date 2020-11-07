@@ -1,5 +1,5 @@
-from engthesis.embeddings import Node2Vec
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import Node2Vec
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_node2vec_fast_embeds_without_error():

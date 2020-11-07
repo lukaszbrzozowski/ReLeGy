@@ -1,5 +1,5 @@
-from engthesis.embeddings import GraRep
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import GraRep
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_grarep_fast_embeds_without_error():

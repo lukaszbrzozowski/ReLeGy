@@ -1,5 +1,5 @@
-from engthesis.embeddings import LaplacianEigenmaps
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import LaplacianEigenmaps
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_laplacian_eigenmaps_fast_embeds_without_error():

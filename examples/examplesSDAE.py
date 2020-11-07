@@ -1,4 +1,4 @@
-from engthesis.helpers.sdae import SDAE
+from relegy.helpers.sdae import SDAE
 import networkx as nx
 
 G = nx.random_graphs.erdos_renyi_graph(100, 0.2)

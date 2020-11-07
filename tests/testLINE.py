@@ -1,5 +1,5 @@
-from engthesis.embeddings import LINE
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import LINE
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_line_fast_embeds_without_error():

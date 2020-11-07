@@ -1,5 +1,5 @@
-from engthesis.embeddings import HOPE
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import HOPE
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_hope_fast_embeds_without_error():

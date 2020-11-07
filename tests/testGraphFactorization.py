@@ -1,5 +1,5 @@
-from engthesis.embeddings import GraphFactorization
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import GraphFactorization
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_graph_factorization_fast_embeds_without_error():

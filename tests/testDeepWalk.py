@@ -1,5 +1,5 @@
-from engthesis.embeddings import DeepWalk
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import DeepWalk
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_deep_walk_fast_embeds_without_error():

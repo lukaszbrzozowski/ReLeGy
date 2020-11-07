@@ -1,4 +1,4 @@
-import engthesis.embeddings as emb
+import relegy.embeddings as emb
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt

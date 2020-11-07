@@ -1,5 +1,5 @@
-from engthesis.embeddings import SDNE
-from engthesis.graphs.examples import examplesDict
+from relegy.embeddings import SDNE
+from relegy.graphs.examples import examplesDict
 import numpy as np
 
 def test_sdne_fast_embeds_without_error():

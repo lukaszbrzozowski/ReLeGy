@@ -1,4 +1,4 @@
-import engthesis.embeddings as emb
+import relegy.embeddings as emb
 import networkx as nx
 from time import time
 

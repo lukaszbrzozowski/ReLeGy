@@ -1,4 +1,4 @@
-import engthesis.embeddings as emb
+import relegy.embeddings as emb
 import networkx as nx
 import numpy as np
 from sklearn.preprocessing import StandardScaler

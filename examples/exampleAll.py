@@ -1,7 +1,7 @@
-from engthesis.embeddings.node.laplacianembeddings import LaplacianEmbeddings
-from engthesis.embeddings.node.graphfactorization import GraphFactorization
-from engthesis.embeddings.node.grarep import GraRep
-from engthesis.embeddings.node.hope import HOPE
+from relegy.embeddings.node.laplacianembeddings import LaplacianEmbeddings
+from relegy.embeddings.node.graphfactorization import GraphFactorization
+from relegy.embeddings.node.grarep import GraRep
+from relegy.embeddings.node.hope import HOPE
 import networkx as nx
 
 #Data preparation

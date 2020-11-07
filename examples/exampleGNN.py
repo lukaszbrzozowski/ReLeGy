@@ -1,5 +1,5 @@
-from engthesis.embeddings.GNN import GNN
-import engthesis.helpers.gnn_utils as utils
+from relegy.embeddings.GNN import GNN
+import relegy.helpers.gnn_utils as utils
 import tensorflow.compat.v1 as tf
 import networkx as nx
 

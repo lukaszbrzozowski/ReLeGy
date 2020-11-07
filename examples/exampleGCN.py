@@ -1,8 +1,8 @@
-import engthesis.embeddings as emb
+import relegy.embeddings as emb
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
-import engthesis.helpers.gnn_utils as utils
+import relegy.helpers.gnn_utils as utils
 
 
 E, N, labels, mask_train, mask_test = utils.load_karate(path='../data/karate-club/')

@@ -1,4 +1,4 @@
-import engthesis.embeddings as emb
+import relegy.embeddings as emb
 import networkx as nx
 
 G = nx.erdos_renyi_graph(200, 0.1)

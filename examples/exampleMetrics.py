@@ -1,5 +1,5 @@
-from engthesis.embeddings.node import graphfactorization, laplacianembeddings, hope
-from engthesis.metrics.metrics import *
+from relegy.embeddings.node import graphfactorization, laplacianembeddings, hope
+from relegy.metrics.metrics import *
 import networkx as nx
 import matplotlib.pyplot as plt
 
