@@ -11,11 +11,13 @@ SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 
 tf.disable_v2_behavior()
 
+
 def weight_variable(shape, nm):
     # function to initialize weights
     initial = tf.truncated_normal(shape, stddev=0.1)
     tf.summary.histogram(nm, initial, collections=['always'])
     return tf.Variable(initial, name=nm)
+
 
 def from_EN_to_GNN(E, N):
     """
@@ -56,6 +58,7 @@ def from_EN_to_GNN(E, N):
     # print(graphnode.shape)
 
     return inp, arcnode, graphnode
+
 
 def from_nx_to_GNN(graph: nx.Graph, idx_labels: list):
     n = len(graph.nodes)

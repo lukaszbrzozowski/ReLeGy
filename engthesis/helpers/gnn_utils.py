@@ -5,7 +5,7 @@ import scipy.sparse as sp
 SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 
 
-def load_karate(path="data/karate-club/"):
+def load_karate(path="engthesis/data/karate-club/"):
     """Load karate club dataset"""
     print('Loading karate club dataset...')
     import random

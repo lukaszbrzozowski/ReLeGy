@@ -7,35 +7,22 @@ import tensorflow as tf
 import scipy.sparse as sps
 from tensorflow.keras.layers import Layer
 
+
 class GCN(Model):
 
     def __init__(self,
                  graph: Graph,
-                 Y: ndarray,
-                 X: ndarray = None,
-                 d: int = 2
                  ):
         super().__init__(graph)
-        self.__d = d
-        self.__A = nx.adjacency_matrix(graph, nodelist=np.arange(len(graph.nodes)))
-        self.__N = self.__A.shape[0]
-        if X is None:
-            self.__X = sps.identity(self.__N)
-        else:
-            self.__X = X
-        if sps.issparse(self.__X):
-            self.__X = tf.convert_to_tensor(self.__X.toarray().astype(np.float32))
-        else:
-            self.__X = tf.convert_to_tensor(self.__X.astype(np.float32))
-
-        A_hat = self.__A + sps.identity(self.__A.shape[0])
-        D = sps.diags(A_hat.sum(axis=0).A1)
-        D_sqrt_inv = D.sqrt().power(-1)
-        result = D_sqrt_inv @ A_hat @ D_sqrt_inv
-
-        self.__A_weighted = tf.convert_to_tensor(result.toarray().astype(np.float32))
-        self.__Y = Y
-        self.model = None
+        self.__X = None
+        self.__Y = None
+        self.__d = None
+        self.__Y_mask = None
+        self.__A = None
+        self.__A_weighted = None
+        self.__N = None
+        self.__model = None
+        self.__optimizer = None
 
     class GCNLayer(Layer):
         def __init__(self, output_dim, A_matrix, activation_id, **kwargs):
@@ -59,26 +46,47 @@ class GCN(Model):
             act = tf.keras.activations.get(self.activation_id)
             return act(tf.matmul(self.__A_matrix, tf.matmul(input_data, self.kernel)) + self.bias)
 
-    def get_loss(self, model):
-        y_pred = model(self.__X)
-        scce = tf.keras.losses.SparseCategoricalCrossentropy()
-        return scce(self.__Y, y_pred)
+    @Model._init_in_init_model_fit
+    def initialize(self,
+                   Y: ndarray,
+                   Y_mask: ndarray = None,
+                   X: ndarray = None):
 
-    def get_gradients(self, model):
-        with tf.GradientTape() as tape:
-            tape.watch(model.variables)
-            L = self.get_loss(model)
-        g = tape.gradient(L, model.variables)
-        return g
+        graph = self.get_graph()
 
-    def info(self) -> str:
-        raise NotImplementedError
+        self.__d = len(np.unique(Y))
 
-    def embed(self, n_hid=None,
-              num_epoch=300,
-              activations=None,
-              lr=0.01,
-              verbose=True) -> ndarray:
+        self.__A = nx.adjacency_matrix(graph, nodelist=np.arange(len(graph.nodes)))
+        self.__N = self.__A.shape[0]
+
+        if X is None:
+            self.__X = sps.identity(self.__N)
+        else:
+            self.__X = X
+        if sps.issparse(self.__X):
+            self.__X = tf.convert_to_tensor(self.__X.toarray().astype(np.float32))
+        else:
+            self.__X = tf.convert_to_tensor(self.__X.astype(np.float32))
+
+        self.__Y = Y
+        if Y_mask is None:
+            self.__Y_mask = np.repeat(1, len(Y))
+        else:
+            self.__Y_mask = Y_mask
+
+
+        A_hat = self.__A + sps.identity(self.__A.shape[0])
+        D = sps.diags(A_hat.sum(axis=0).A1)
+        D_sqrt_inv = D.sqrt().power(-1)
+        result = D_sqrt_inv @ A_hat @ D_sqrt_inv
+
+        self.__A_weighted = tf.convert_to_tensor(result.toarray().astype(np.float32))
+
+    @Model._init_model_in_init_model_fit
+    def initialize_model(self,
+                         n_hid = None,
+                         activations = None,
+                         lr = 0.01):
         if n_hid is None:
             n_hid = np.array([self.__X.shape[1], self.__d])
         if activations is None:
@@ -93,18 +101,57 @@ class GCN(Model):
                             for i in range(1, len(n_hid))]
         model = tf.keras.Sequential(model_layers)
         optimizer = tf.keras.optimizers.Adam(learning_rate=lr)
+        self.__optimizer = optimizer
         model.compile(optimizer=optimizer, metrics=[tf.keras.metrics.Accuracy()])
+        self.__model = model
+
+    def __get_loss(self, model):
+        y_pred = model(self.__X)
+        scce = tf.keras.losses.SparseCategoricalCrossentropy()
+        return scce(self.__Y, y_pred, sample_weight=self.__Y_mask)
+
+    def __get_gradients(self, model):
+        with tf.GradientTape() as tape:
+            tape.watch(model.variables)
+            L = self.__get_loss(model)
+        g = tape.gradient(L, model.variables)
+        return g
+
+    def info(self) -> str:
+        raise NotImplementedError
+
+    @Model._fit_in_init_model_fit
+    def fit(self,
+            num_iter=300,
+            verbose=True):
+
         accuracy = tf.keras.metrics.Accuracy()
-        for i in range(num_epoch):
-            g = self.get_gradients(model)
-            optimizer.apply_gradients(zip(g, model.variables))
+        for i in range(num_iter):
+            g = self.__get_gradients(self.__model)
+            self.__optimizer.apply_gradients(zip(g, self.__model.variables))
             if verbose:
-                print("Epoch " + str(i+1) + ": " + str(self.get_loss(model)))
+                print("Epoch " + str(i+1) + ": " + str(self.__get_loss(self.__model)))
                 accuracy.reset_states()
-                accuracy.update_state(self.__Y, np.argmax(model(self.__X), axis=1))
+                accuracy.update_state(self.__Y, np.argmax(self.__model(self.__X), axis=1))
                 print("Accuracy: " + str(accuracy.result().numpy()))
 
-        self.model = model
+    @Model._embed_in_init_model_fit
+    def embed(self):
+        return self.__model(self.__X)
 
-        return self.model(self.__X)
+    @staticmethod
+    def fast_embed(graph: Graph,
+                   Y: ndarray,
+                   Y_mask: ndarray = None,
+                   X: ndarray = None,
+                   n_hid = None,
+                   activations = None,
+                   lr = 0.01,
+                   num_iter=300):
+        gcn = GCN(graph)
+        gcn.initialize(Y, Y_mask, X)
+        gcn.initialize_model(n_hid, activations, lr)
+        gcn.fit(num_iter)
+        return gcn.embed()
+
 

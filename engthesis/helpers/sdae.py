@@ -8,9 +8,8 @@ It was updated and slightly modified to allow for fine-tuning of DNGR
 import os
 
 import numpy as np
-from keras.layers import Input
-from keras.layers.core import Dense, Dropout
-from keras.models import Model, Sequential
+from tensorflow.keras.layers import Input, Dense, Dropout
+from tensorflow.keras.models import Model, Sequential
 
 from . import nn_utils
 
