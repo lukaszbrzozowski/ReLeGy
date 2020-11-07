@@ -1,6 +1,8 @@
 from engthesis.model import Model
-from networkx import to_numpy_array, Graph
-from numpy import arange
+import networkx as nx
+from networkx import Graph
+import numpy as np
+
 import tensorflow as tf
 
 
@@ -28,7 +30,7 @@ class HOPE(Model):
 
         assert proximity in ["Katz", "RPR", "CN", "AA"], "Proximity measure must be 'Katz', 'RPR', 'CN' or 'AA'"
         graph = self.get_graph()
-        A = to_numpy_array(graph, nodelist=arange(len(graph.nodes)))
+        A = nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes)))
         self.__A = tf.constant(A, dtype="float32")
         self.__N = tf.constant(A.shape[0], dtype="float32")
         self.__proximity = proximity

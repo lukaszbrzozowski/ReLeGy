@@ -1,5 +1,6 @@
 import numpy as np
-from networkx import to_numpy_array, Graph
+from networkx import Graph
+import networkx as nx
 from numpy import ndarray
 
 from engthesis.helpers.sdae import SDAE
@@ -9,7 +10,7 @@ from engthesis.model import Model
 class DNGR(Model):
 
     def __init__(self,
-                 graph: Graph,):
+                 graph: Graph):
 
         super().__init__(graph)
         self.__d = None
@@ -71,7 +72,7 @@ class DNGR(Model):
         raise NotImplementedError
 
     def __random_surf(self) -> ndarray:
-        A = to_numpy_array(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
+        A = nx.to_numpy_array(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
         scaled_A = self.__scale_sim_mat(A)
         P0 = np.identity(A.shape[0])
         P = P0

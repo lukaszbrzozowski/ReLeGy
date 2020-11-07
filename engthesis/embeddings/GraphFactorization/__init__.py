@@ -1,6 +1,8 @@
 from engthesis.model import Model
-from numpy import ndarray, arange
-from networkx import Graph, to_numpy_array
+import numpy as np
+import networkx as nx
+from numpy import ndarray
+from networkx import Graph
 import tensorflow as tf
 
 
@@ -26,7 +28,7 @@ class GraphFactorization(Model):
                    d: int = 2,
                    lmbd: float = 0.1):
         graph = self.get_graph()
-        A = to_numpy_array(graph, nodelist=arange(len(graph.nodes)))
+        A = nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes)))
         self.__A = tf.constant(A, dtype="float32")
         self.__N = tf.constant(A.shape[0])
         self.__mask = tf.constant((A > 0), dtype="float32")

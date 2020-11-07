@@ -1,7 +1,8 @@
-import numpy as np
 from gensim.models import word2vec
-from networkx import to_numpy_array, Graph
-from numpy import ndarray, arange, empty
+import networkx as nx
+from networkx import Graph
+import numpy as np
+from numpy import ndarray
 
 from engthesis.model import Model
 
@@ -30,7 +31,7 @@ class Node2Vec(Model):
                    q: float = 1):
         graph = self.get_graph()
         self.__N = len(graph.nodes)
-        self.__A = to_numpy_array(graph, nodelist=arange(self.__N))
+        self.__A = nx.to_numpy_array(graph, nodelist=np.arange(self.__N))
         self.__T = T
         self.__gamma = gamma
         self.__p = p
@@ -116,8 +117,8 @@ class Node2Vec(Model):
 
     @Model._embed_in_init_model_fit
     def embed(self):
-        ret_matrix = empty((self.__N, self.__d), dtype="float32")
-        for i in arange(self.__N):
+        ret_matrix = np.empty((self.__N, self.__d), dtype="float32")
+        for i in np.arange(self.__N):
             ret_matrix[i, :] = self.__model.wv[str(i)]
         return ret_matrix
 

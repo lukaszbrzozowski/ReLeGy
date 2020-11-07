@@ -1,6 +1,8 @@
 from engthesis.model import Model
-from networkx import to_numpy_array, Graph
-from numpy import ndarray, arange, empty
+import networkx as nx
+from networkx import Graph
+import numpy as np
+from numpy import ndarray
 import tensorflow as tf
 import tensorflow_probability as tfp
 from gensim.models import word2vec
@@ -26,7 +28,7 @@ class DeepWalk(Model):
                    gamma: int = 1):
         graph = self.get_graph()
         self.__N = len(graph.nodes)
-        self.__A = tf.constant(to_numpy_array(graph, nodelist=arange(self.__N)), dtype="float32")
+        self.__A = tf.constant(nx.to_numpy_array(graph, nodelist=np.arange(self.__N)), dtype="float32")
         self.__T = tf.constant(T)
         self.__gamma = tf.constant(gamma)
         self.__rw = self.__generate_random_walks()
@@ -81,8 +83,8 @@ class DeepWalk(Model):
 
     @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
-        ret_matrix = empty((self.__N, self.__d), dtype="float32")
-        for i in arange(self.__N):
+        ret_matrix = np.empty((self.__N, self.__d), dtype="float32")
+        for i in np.arange(self.__N):
             ret_matrix[i, :] = self.__model.wv[str(i)]
         return ret_matrix
 
