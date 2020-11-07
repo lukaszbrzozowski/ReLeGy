@@ -3,7 +3,8 @@ from engthesis.model import Model
 from typing import Dict, Any, Union, Callable
 
 import numpy as np
-from networkx import laplacian_matrix, to_numpy_array, Graph
+import networkx as nx
+from networkx import Graph
 from scipy.optimize import minimize
 
 
@@ -29,8 +30,8 @@ class LaplacianEigenmaps(Model):
         self.__N = len(self.get_graph().nodes)
         self.__Y0 = np.random.rand(self.__N, self.__d).reshape(-1)
 
-        L = laplacian_matrix(self.get_graph()).toarray()
-        A = to_numpy_array(self.get_graph(), nodelist=np.arange(self.__N))
+        L = nx.laplacian_matrix(self.get_graph(), nodelist=np.arange(self.__N)).toarray()
+        A = nx.to_numpy_array(self.get_graph(), nodelist=np.arange(self.__N))
         D = L + A
         Id = np.eye(self.__d)
 

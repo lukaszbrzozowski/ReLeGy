@@ -1,5 +1,6 @@
 import numpy as np
-from networkx import Graph, to_numpy_array
+import networkx as nx
+from networkx import Graph
 from engthesis.model import Model
 
 
@@ -34,7 +35,7 @@ class LINE(Model):
         self.__E = len(graph.edges)
         self.__U1 = kwargs["U1"] if "U1" in kwargs else np.random.random((len(graph.nodes), self.__d))
         self.__U2 = kwargs["U2"] if "U2" in kwargs else np.random.random((len(graph.nodes), self.__d))
-        self.__A = to_numpy_array(graph)
+        self.__A = nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes)))
         self.__Frob = lambda U: np.linalg.norm(U)
         p1 = lambda x, y: 1 / (1 + np.exp(-np.dot(x, y)))
         p2 =  lambda x, y: np.exp(np.dot(x, y)) / (np.sum(self.__U2 @ y))

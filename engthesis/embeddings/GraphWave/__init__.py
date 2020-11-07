@@ -1,5 +1,6 @@
 from engthesis.model import Model
-from networkx import Graph, laplacian_matrix
+import networkx as nx
+from networkx import Graph
 import numpy as np
 from numpy import ndarray
 import tensorflow as tf
@@ -30,7 +31,7 @@ class GraphWave(Model):
         self.__eta = eta
         self.__gamma = gamma
         self.__N = len(graph.nodes)
-        self.__L = tf.convert_to_tensor(laplacian_matrix(graph, nodelist=np.arange(self.__N)).toarray(),
+        self.__L = tf.convert_to_tensor(nx.laplacian_matrix(graph, nodelist=np.arange(self.__N)).toarray(),
                                         dtype="float32")
         self.__kernel = kernel
         self.__thetas = tf.cast(self.__calculate_theta(), "complex64")
@@ -54,7 +55,7 @@ class GraphWave(Model):
         self.__Z = Z
 
     @Model._embed_in_init_fit
-    def embed(self):
+    def embed(self) -> ndarray:
         return self.__Z
 
     def info(self) -> str:
@@ -87,7 +88,7 @@ class GraphWave(Model):
                    kernel=lambda x, s: tf.math.exp(-x * s),
                    interval_start: float = 0,
                    interval_stop: float = 1,
-                   d: int = 2):
+                   d: int = 2) -> ndarray:
         gw = GraphWave(graph)
         gw.initialize(J=J,
                       eta=eta,

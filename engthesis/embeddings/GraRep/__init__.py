@@ -1,6 +1,7 @@
 from engthesis.model import Model
-from numpy import arange
-from networkx import Graph, to_numpy_array
+import numpy as np
+import networkx as nx
+from networkx import Graph
 import tensorflow as tf
 
 
@@ -35,7 +36,7 @@ class GraRep(Model):
         self.__lmbd = tf.constant(lmbd, dtype="float32")
         self.__N = len(graph.nodes)
         self.__beta = tf.constant(self.__lmbd/self.__N, dtype="float32")
-        self.__A = tf.convert_to_tensor(to_numpy_array(graph, nodelist=arange(len(graph.nodes))), dtype="float32")
+        self.__A = tf.convert_to_tensor(nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes))), dtype="float32")
         self.__D = tf.linalg.diag(tf.pow(tf.reduce_sum(self.__A, 1), -1))
         self.__S = tf.matmul(self.__D, self.__A)
         self.__S_cur = tf.eye(self.__N, dtype="float32")
@@ -99,6 +100,7 @@ class GraRep(Model):
         if concatenated:
             return tf.concat(retList, 1).numpy()
         else:
+            # noinspection PyUnresolvedReferences
             return [retList[i].numpy() for i in range(K)]
 
     def info(self) -> str:

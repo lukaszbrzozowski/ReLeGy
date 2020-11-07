@@ -11,7 +11,7 @@ from tensorflow.keras.layers import Layer
 class GCN(Model):
 
     def __init__(self,
-                 graph: Graph,
+                 graph: Graph
                  ):
         super().__init__(graph)
         self.__X = None

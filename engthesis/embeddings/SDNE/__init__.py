@@ -1,6 +1,7 @@
 from engthesis.model import Model
 from engthesis.metrics import metrics as met
-from networkx import Graph, to_numpy_array
+from networkx import Graph
+import networkx as nx
 import tensorflow as tf
 import numpy as np
 from tensorflow_addons.losses import metric_learning
@@ -33,7 +34,7 @@ class SDNE(Model):
         self.__beta = beta
         self.__nu = nu
         graph = self.get_graph()
-        self.__A = to_numpy_array(graph, nodelist=np.arange(len(graph.nodes))).astype(np.float32)
+        self.__A = nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes))).astype(np.float32)
         self.__A_tensor = tf.convert_to_tensor(self.__A)
         self.__N = len(graph.nodes)
         self.__B = tf.add(tf.multiply(self.__A, self.__beta), tf.ones([self.__N, self.__N]))

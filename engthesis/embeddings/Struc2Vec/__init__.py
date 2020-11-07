@@ -1,7 +1,8 @@
 import numpy as np
 from fastdtw import fastdtw
 from gensim.models import Word2Vec
-from networkx import Graph, diameter, floyd_warshall_numpy
+from networkx import Graph
+import networkx as nx
 from numpy import ndarray
 from six import iteritems
 
@@ -35,7 +36,7 @@ class Struc2Vec(Model):
         self.__T = T
         self.__gamma = gamma
         self.__q = q
-        self.__k = diameter(graph)
+        self.__k = nx.diameter(graph)
         self.__N = len(graph.nodes)
         if OPT3_k is not None:
             assert (OPT3_k <= self.__k)
@@ -69,7 +70,7 @@ class Struc2Vec(Model):
     def __generate_similarity_matrices(self):
         deg_seq = np.array(self.get_graph().degree(np.arange(self.__N)))[:, 1].reshape(self.__N, -1)
         k_max = self.__k
-        dist_matrix = floyd_warshall_numpy(self.get_graph(), nodelist=np.arange(self.__N))
+        dist_matrix = nx.floyd_warshall_numpy(self.get_graph(), nodelist=np.arange(self.__N))
         f_cur = np.zeros((self.__N, self.__N))
         matrix_dict = {}
         for k in np.arange(k_max + 1):
