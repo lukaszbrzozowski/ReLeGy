@@ -1,5 +1,5 @@
 from relegy.embeddings.GNN import GNN
-import relegy.helpers.gnn_utils as utils
+import relegy.__helpers.gnn_utils as utils
 import tensorflow.compat.v1 as tf
 import networkx as nx
 

@@ -111,6 +111,12 @@ class Model(ABC):
         return wrap
 
     @abstractmethod
+    def initialize(self): pass
+
+    @abstractmethod
+    def fit(self): pass
+
+    @abstractmethod
     def embed(self) -> ndarray: pass
 
     @abstractmethod

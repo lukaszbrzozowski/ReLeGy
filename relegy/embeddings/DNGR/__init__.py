@@ -3,7 +3,7 @@ from networkx import Graph
 import networkx as nx
 from numpy import ndarray
 
-from relegy.helpers.sdae import SDAE
+from relegy.__helpers.sdae import SDAE
 from relegy.__base import Model
 
 
