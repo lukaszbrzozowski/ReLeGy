@@ -8,9 +8,19 @@ from tensorflow_addons.losses import metric_learning
 
 
 class SDNE(Model):
+    """
+    The SDNE method implementation. \n
+    The details may be found in: \n
+    'D. Wang, P. Cui, and W. Zhu. Structural deep network embedding. In KDD, 2016.'
+    """
 
     def __init__(self,
                  graph: Graph):
+        """
+        SDNE - constructor (step I)
+
+        @param graph: The graph to be embedded.
+        """
         super().__init__(graph)
         self.__d = None
         self.__alpha = None
@@ -30,6 +40,13 @@ class SDNE(Model):
                    alpha: float = 1,
                    beta: float = 0.3,
                    nu: float = 0.01):
+        """
+        SDNE - initialize (step II) \n
+        Generates the matrices for loss calculation.
+        @param alpha: Loss function parameter, as described in the article.
+        @param beta: Loss function parameter, as described in the article.
+        @param nu: Loss function parameter, as described in the article.
+        """
         self.__alpha = alpha
         self.__beta = beta
         self.__nu = nu
@@ -45,6 +62,15 @@ class SDNE(Model):
                          n_layers: int = 2,
                          hidden_layers=None,
                          lr: float = 0.1):
+        """
+        SDNE - initialize_model (step III) \n
+        Builds the autoencoding network.
+        @param d: The embedding dimension.
+        @param n_layers: Number of encoding layers.
+        @param hidden_layers: Number of neurons on the encoding layers. The first number must be the number of vertices
+        and the last number must be equal to 'd'
+        @param lr: Learning rate
+        """
         self.__K = n_layers
         self.__d = d
         if hidden_layers is None:
@@ -76,18 +102,15 @@ class SDNE(Model):
         self.__model = model
         self.__model.compile(optimizer=optimizer)
 
-    def get_hid(self):
-        return self.__hid
-
     def info(self) -> str:
         raise NotImplementedError
 
-    def get_nth_layer_output(self, model, n):
+    def __get_nth_layer_output(self, model, n):
         partial = tf.keras.Model(model.inputs, model.layers[n].output)
         return partial(self.__A, training=False)
 
     def __loss1st(self, model):
-        hidden_output = self.get_nth_layer_output(model, self.__K - 2)
+        hidden_output = self.__get_nth_layer_output(model, self.__K - 2)
         return tf.math.square(tf.norm(tf.multiply(self.__A_tensor, metric_learning.pairwise_distance(hidden_output))))
 
     def __loss2nd(self, x_hat):
@@ -111,6 +134,10 @@ class SDNE(Model):
         return g
 
     def get_decoded_matrix(self):
+        """
+        Returns the decoded adjacency matrix.
+        @return: Matrix having shape NxN.
+        """
         return self.__model(self.__A).numpy()
 
     @Model._fit_in_init_model_fit
@@ -118,6 +145,12 @@ class SDNE(Model):
             num_iter=300,
             verbose=False
             ):
+        """
+        SDNE - fit (step IV) \n
+        Trains the autoencoding network given the previously generated loss function.
+        @param num_iter: The number of iterations
+        @param verbose: Verbosity parameter
+        """
         for i in range(num_iter):
             g = self.__get_gradients(self.__model)
             self.__optimizer.apply_gradients(zip(g, self.__model.variables))
@@ -128,7 +161,12 @@ class SDNE(Model):
 
     @Model._embed_in_init_model_fit
     def embed(self) -> np.ndarray:
-        return self.get_nth_layer_output(self.__model, self.__K - 2).numpy()
+        """
+        SDNE - embed (step V) \n
+        Returns the embedding matrix.
+        @return: Matrix having shape Nxd.
+        """
+        return self.__get_nth_layer_output(self.__model, self.__K - 2).numpy()
 
     @staticmethod
     def fast_embed(graph: Graph,
@@ -141,6 +179,23 @@ class SDNE(Model):
                    lr: float = 0.1,
                    num_iter: int = 300,
                    fit_verbose: bool = False):
+        """
+        SDNE - fast_embed \n
+        Returns the embedding in a single step.
+
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param alpha: Loss function parameter, as described in the article. Present in 'initialize'
+        @param beta: Loss function parameter, as described in the article. Present in 'initialize'
+        @param nu: Loss function parameter, as described in the article. Present in 'initialize'
+        @param d: The embedding dimension. Present in 'initialize_model'
+        @param n_layers: Number of encoding layers. Present in 'initialize_model'
+        @param hidden_layers: Number of neurons on the encoding layers. The first number must be the number of vertices
+        and the last number must be equal to 'd'. Present in 'initialize_model'
+        @param lr: Learning rate. Present in 'initialize_model'
+        @param num_iter: The number of iterations. Present in 'fit'
+        @param fit_verbose: Verbosity parameter. Present in 'fit'
+        @return: The embedding matrix having shape Nxd.
+        """
         sdne = SDNE(graph)
         sdne.initialize(alpha=alpha,
                         beta=beta,
