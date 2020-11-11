@@ -6,10 +6,23 @@ import tensorflow as tf
 
 
 class GraRep(Model):
-
+    """
+    The GraRep method implementation. \n
+    The details may be found in: \n
+    'S. Cao, W. Lu, and Q. Xu. Grarep: Learning graph representations with global structural information. In KDD, 2015'
+    """
     def __init__(self,
                  graph: Graph,
                  keep_full_SVD: bool = True):
+        """
+        GraRep - constructor (step I)
+
+        @param graph: The graph to be embedded.
+        @param keep_full_SVD: if True, the GraRep instance keeps full SVDs decomposition in memory. This allows for fast
+         calculation of embedding after fitting for different values of 'd'. If False, 'd' must be provided during
+         fitting and cannot be changed in the 'embed' method.
+
+        """
 
         super().__init__(graph)
 
@@ -31,6 +44,12 @@ class GraRep(Model):
     @Model._init_in_init_fit
     def initialize(self,
                    lmbd: float = 1):
+        """
+        GraRep - initialize (step II) \n
+        Generates the adjacency and transition matrices.
+
+        @param lmbd: regularization parameter, as described in the paper.
+        """
 
         graph = self.get_graph()
         self.__lmbd = tf.constant(lmbd, dtype="float32")
@@ -45,6 +64,14 @@ class GraRep(Model):
     def fit(self,
             max_K=1,
             d=None):
+        """
+        GraRep - fit (step III) \n
+        Calculates the SVD decompositions for matrices determining 1, ..., max_K similarity orders.
+
+        @param max_K: maximal similarity order K for which the SVD decomposition are to be calculated. K in the 'embed'
+        must equal or smaller than max_K in the 'fit' method.
+        @param d: The embedding dimension. Must be passed when keep_full_SVDs is false, ignored otherwise.
+        """
 
         if max_K > self.__max_K:
             self.__max_K = max_K
@@ -81,6 +108,15 @@ class GraRep(Model):
               K=1,
               d=2,
               concatenated=True):
+        """
+        GraRep - embed (step IV) \n
+        Returns the embedding in the form of a matrix with dimension Nx(K*d).
+        @param K: Similarity order of the embedding. K in the 'embed'
+        must be equal or smaller than max_K in the 'fit' method.
+        @param d: The embedding dimension. Must be passed when keep_full_SVDs is True, ignored otherwise.
+        @param concatenated: If False, returns a list of K matrices of dimensions Nxd.
+        @return: The embedding matrix/matrices.
+        """
 
         if K > self.__max_K:
             raise Exception("The method has been fitted with smaller K")
@@ -112,6 +148,17 @@ class GraRep(Model):
                    K: int = 1,
                    lmbd: float = 1,
                    concatenated: bool = True):
+        """
+        GraRep - fast_embed \n
+        Performs the embedding in a single step. The parameter keep_full_SVDs is passed as False, as the embedding is
+        calculated once.
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param d: The embedding dimension. Present in 'fit'
+        @param K: Similarity order of the embedding. Present in 'embed'
+        @param lmbd: Regularization parameter, as described in the paper. Present in 'initialize'
+        @param concatenated: If False, returns a list of K matrices of dimensions Nxd. Present in 'embed'
+        @return: The embedding matrix/matrices.
+        """
         GR = GraRep(graph=graph,
                     keep_full_SVD=False)
         GR.initialize(lmbd=lmbd)

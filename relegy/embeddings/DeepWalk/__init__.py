@@ -9,9 +9,19 @@ from gensim.models import word2vec
 
 
 class DeepWalk(Model):
+    """
+    The DeepWalk method implementation. \n
+    The details may be found in: \n
+    'B. Perozzi, R. Al-Rfou, and S. Skiena. Deepwalk: Online learning of social representations. In KDD, 2014'
+    """
 
     def __init__(self,
                  graph: Graph):
+        """
+        DeepWalk - constructor (step I)
+
+        @param graph: The graph to be embedded.
+        """
 
         super().__init__(graph)
         self.__model = None
@@ -26,6 +36,13 @@ class DeepWalk(Model):
     def initialize(self,
                    T: int = 40,
                    gamma: int = 1):
+        """
+        DeepWalk - initialize (step II) \n
+        Calculates the random walks on the graph.
+
+        @param T: The length of a single random walk.
+        @param gamma: Number of random walks starting at a single vertex.
+        """
         graph = self.get_graph()
         self.__N = len(graph.nodes)
         self.__A = tf.constant(nx.to_numpy_array(graph, nodelist=np.arange(self.__N)), dtype="float32")
@@ -41,6 +58,17 @@ class DeepWalk(Model):
                          window: int = 5,
                          hs: int = 1,
                          negative: int = 0):
+        """
+        DeepWalk - initialize_model (step III) \n
+        Initializes the Word2Vec network model.
+        @param d: The embedding dimension.
+        @param alpha: The starting learning rate of the model, as described in gensim.Word2Vec documentation.
+        @param min_alpha: The minimal learning rate of the model, as described in gensim.Word2Vec documentation.
+        @param window: The window size of the network, as described in gensim.Word2Vec documentation.
+        @param hs: Must be 0 or 1. If 1, Hierarchical Softmax is used, as described in gensim.Word2Vec documentation.
+        @param negative: Number of samples for the Negative Sampling method, as described in gensim.Word2Vec
+        documentation. If 0, the Negative Sampling is not used.
+        """
 
         model = word2vec.Word2Vec(sentences=None,
                                   size=d,
@@ -58,6 +86,9 @@ class DeepWalk(Model):
         self.__d = d
 
     def __generate_random_walks(self):
+        """
+        Generates the random walks on the graph.
+        """
         D = tf.linalg.diag(tf.pow(tf.reduce_sum(self.__A, 1), -1))
         P = tfp.distributions.Categorical(probs=tf.tile(tf.matmul(D, self.__A), [self.__gamma, 1]))
         temp_dist = tfp.distributions.Categorical(probs=tf.tile(tf.eye(self.__N), [self.__gamma, 1]))
@@ -68,6 +99,11 @@ class DeepWalk(Model):
         return hmm.sample().numpy().astype("str").tolist()
 
     def get_random_walks(self):
+        """
+        Returns the random walks generated on the graph. Can be used only after the 'initialize' step.
+        """
+        if not self._initialized:
+            raise Exception("Cannot be used before the 'initialize' step")
         return self.__rw
 
     def info(self) -> str:
@@ -76,13 +112,22 @@ class DeepWalk(Model):
     @Model._fit_in_init_model_fit
     def fit(self,
             num_iter=300):
-
+        """
+        DeepWalk - fit (step IV) \n
+        Trains the Word2Vec SkipGram network on the vocabulary of the previously generated random walks.
+        @param num_iter: Number of iterations of the training.
+        """
         self.__model.train(self.__rw,
                            epochs=num_iter,
                            total_examples=len(self.__rw))
 
     @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
+        """
+        DeepWalk - embed (step V) \n
+        Returns the embedding from the Word2Vec network.
+        @return: The embedding matrix.
+        """
         ret_matrix = np.empty((self.__N, self.__d), dtype="float32")
         for i in np.arange(self.__N):
             ret_matrix[i, :] = self.__model.wv[str(i)]
@@ -99,6 +144,27 @@ class DeepWalk(Model):
                    hs: int = 1,
                    negative: int = 0,
                    num_iter=300) -> ndarray:
+        """
+        DeepWalk - fast_embed \n
+        Returns the embedding in a single step.
+
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param T: The length of a single random walk. Present in 'initialize'
+        @param gamma: Number of random walks starting at a single vertex. Present in 'initialize'
+        @param d: The embedding dimension. Present in 'initialize_model'
+        @param alpha: The starting learning rate of the model, as described in gensim.Word2Vec documentation. Present
+        in 'initialize_model'
+        @param min_alpha: The minimal learning rate of the model, as described in gensim.Word2Vec documentation. Present
+        in 'initialize_model'
+        @param window: The window size of the network, as described in gensim.Word2Vec documentation. Present in
+        'initialize_model'
+        @param hs: Must be 0 or 1. If 1, Hierarchical Softmax is used, as described in gensim.Word2Vec documentation.
+        Present in 'initialize_model'
+        @param negative: Number of samples for the Negative Sampling method, as described in gensim.Word2Vec
+        documentation. If 0, the Negative Sampling is not used. Present in 'initialize_model'
+        @param num_iter: Number of iterations of the training. Present in 'fit'
+        @return: The embedding matrix.
+        """
         dw = DeepWalk(graph)
         dw.initialize(T=T,
                       gamma=gamma)

@@ -8,9 +8,19 @@ from relegy.__base import Model
 
 
 class Node2Vec(Model):
+    """
+    The Node2Vec method implementation. \n
+    The details may be found in: \n
+    'A. Grover and J. Leskovec. node2vec: Scalable feature learning for networks. In KDD, 2016'
+    """
 
     def __init__(self,
                  graph: Graph) -> None:
+        """
+        Node2Vec - constructor (step I)
+
+        @param graph: The graph to be embedded.
+        """
 
         super().__init__(graph)
         self.__N = None
@@ -29,6 +39,15 @@ class Node2Vec(Model):
                    gamma: int = 1,
                    p: float = 1,
                    q: float = 1):
+        """
+        Node2Vec - initialize (step II) \n
+        Calculates the random walks on the graph.
+
+        @param T: The length of a single random walk.
+        @param gamma: Number of random walks starting at a single vertex.
+        @param p: Bias parameter of the random walks, as described in the article.
+        @param q: Bias parameter of the random walks, as described in the article.
+        """
         graph = self.get_graph()
         self.__N = len(graph.nodes)
         self.__A = nx.to_numpy_array(graph, nodelist=np.arange(self.__N))
@@ -39,6 +58,9 @@ class Node2Vec(Model):
         self.__rw = self.__generate_random_walks()
 
     def __generate_random_walks(self):
+        """
+        Returns the random walks on the graph.
+        """
         random_walks: ndarray = np.empty((self.__N * self.__gamma, self.__T))
         for i in range(self.__gamma):
             # random_walk_matrix contains random walks for 1 iteration of i
@@ -79,6 +101,11 @@ class Node2Vec(Model):
         return random_walks.astype(int).astype(str).tolist()
 
     def get_random_walks(self):
+        """
+        Returns the random walks generated on the graph. Can be used only after the 'initialize' step.
+        """
+        if not self._initialized:
+            raise Exception("Cannot be used before the 'initialize' step")
         return self.__rw
 
     def info(self) -> str:
@@ -92,6 +119,17 @@ class Node2Vec(Model):
                          window=5,
                          hs=0,
                          negative=5):
+        """
+        Node2Vec - initialize_model (step III) \n
+        Generates the Word2Vec network model.
+        @param d: The embedding dimension.
+        @param alpha: The starting learning rate of the model, as described in gensim.Word2Vec documentation.
+        @param min_alpha: The minimal learning rate of the model, as described in gensim.Word2Vec documentation.
+        @param window: The window size of the network, as described in gensim.Word2Vec documentation.
+        @param hs: Must be 0 or 1. If 1, Hierarchical Softmax is used, as described in gensim.Word2Vec documentation.
+        @param negative: Number of samples for the Negative Sampling method, as described in gensim.Word2Vec
+        documentation. If 0, the Negative Sampling is not used.
+        """
 
         model = word2vec.Word2Vec(sentences=None,
                                   size=d,
@@ -111,12 +149,22 @@ class Node2Vec(Model):
     @Model._fit_in_init_model_fit
     def fit(self,
             num_iter=300):
+        """
+        Node2Vec - fit (step IV) \n
+        Trains the Word2Vec SkipGram network on the vocabulary of the previously generated random walks.
+        @param num_iter: Number of iterations of the training.
+        """
         self.__model.train(self.__rw,
                            epochs=num_iter,
                            total_examples=len(self.__rw))
 
     @Model._embed_in_init_model_fit
     def embed(self):
+        """
+        Node2Vec - embed (step V) \n
+        Returns the embedding from the Word2Vec network.
+        @return: The embedding matrix.
+        """
         ret_matrix = np.empty((self.__N, self.__d), dtype="float32")
         for i in np.arange(self.__N):
             ret_matrix[i, :] = self.__model.wv[str(i)]
@@ -135,6 +183,29 @@ class Node2Vec(Model):
                    hs: int = 0,
                    negative: int = 5,
                    num_iter: int = 300):
+        """
+        Node2Vec - fast_embed \n
+        Returns the embedding in a single step.
+
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param T: The length of a single random walk. Present in 'initialize'
+        @param gamma: Number of random walks starting at a single vertex. Present in 'initialize'
+        @param d: The embedding dimension. Present in 'initialize_model'
+        @param p: Bias parameter of the random walks, as described in the article. Present in 'initialize'
+        @param q: Bias parameter of the random walks, as described in the article. Present in 'initialize'
+        @param alpha: The starting learning rate of the model, as described in gensim.Word2Vec documentation. Present
+        in 'initialize_model'
+        @param min_alpha: The minimal learning rate of the model, as described in gensim.Word2Vec documentation. Present
+        in 'initialize_model'
+        @param window: The window size of the network, as described in gensim.Word2Vec documentation. Present in
+        'initialize_model'
+        @param hs: Must be 0 or 1. If 1, Hierarchical Softmax is used, as described in gensim.Word2Vec documentation.
+        Present in 'initialize_model'
+        @param negative: Number of samples for the Negative Sampling method, as described in gensim.Word2Vec
+        documentation. If 0, the Negative Sampling is not used. Present in 'initialize_model'
+        @param num_iter: Number of iterations of the training. Present in 'fit'
+        @return: The embedding matrix.
+        """
         n2v = Node2Vec(graph)
         n2v.initialize(T=T,
                        gamma=gamma,
