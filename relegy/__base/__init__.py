@@ -24,7 +24,7 @@ class Model(ABC):
         if not self._initialized:
             raise Exception("The methods 'initialize' and 'initialize_model' must be called before fitting")
         if not self._initialized_model:
-            raise Exception("The methods 'initialize_model' must be called before fitting")
+            raise Exception("The method 'initialize_model' must be called before fitting")
 
     def _verify_init_and_fit_in_embed(self):
         if not self._initialized:
