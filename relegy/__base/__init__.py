@@ -14,7 +14,7 @@ class Model(ABC):
 
     def _verify_init_in_init_model(self):
         if not self._initialized:
-            raise Exception("The method 'initialize' must be called before initializing the __base")
+            raise Exception("The method 'initialize' must be called before initializing the model")
 
     def _verify_init_in_fit(self):
         if not self._initialized:
