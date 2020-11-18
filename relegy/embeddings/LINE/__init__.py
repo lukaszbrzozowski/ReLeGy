@@ -3,6 +3,7 @@ import networkx as nx
 from networkx import Graph
 from relegy.__base import Model
 
+ddd = {"d":[(lambda d: d > 0, "d has to be greater than 0.")]}
 
 class LINE(Model):
     """
@@ -37,6 +38,7 @@ class LINE(Model):
         self.__grad2 = None
 
     @Model._init_in_init_model_fit
+    @Model._verify_parameters(rules_dict=ddd)
     def initialize(self,
                    d: int = 2,
                    **kwargs):
@@ -56,7 +58,7 @@ class LINE(Model):
         self.__A = nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes)))
         self.__Frob = lambda U: np.linalg.norm(U)
         p1 = lambda x, y: 1 / (1 + np.exp(-np.dot(x, y)))
-        p2 =  lambda x, y: np.exp(np.dot(x, y)) / (np.sum(self.__U2 @ y))
+        p2 = lambda x, y: np.exp(np.dot(x, y)) / (np.sum(self.__U2 @ y))
         self.__o1 = lambda G: -sum([self.__A[i, j] * np.log(p1(self.__U1[i, :], self.__U1[j, :])) for (i, j) in G.edges])
         self.__o2 = lambda G: -sum([self.__A[i, j] * np.log(p2(self.__U2[i, :], self.__U2[j, :])) for (i, j) in G.edges])
         self.__grad1 = lambda i, j: self.__A[i, j] * (-self.__U1[j, :]) * \
@@ -68,6 +70,7 @@ class LINE(Model):
                                  np.sum(self.__U2 @ self.__U2[j, :])) ** 2
 
     @Model._init_model_in_init_model_fit
+    @Model._verify_parameters(rules_dict={})
     def initialize_model(self,
                          batch_size: int = 30,
                          lmbd1: float = 1e-1,
@@ -91,6 +94,7 @@ class LINE(Model):
         self.__lr2 = lr2
 
     @Model._fit_in_init_model_fit
+    @Model._verify_parameters(rules_dict={})
     def fit(self,
             num_iter: int = 400,
             verbose: bool = True):
@@ -123,6 +127,7 @@ class LINE(Model):
                       end="\r")
 
     @Model._embed_in_init_model_fit
+    @Model._verify_parameters(rules_dict={})
     def embed(self):
         """
         LINE - embed (step V) \n
@@ -163,7 +168,7 @@ class LINE(Model):
         @return:
         """
         line = LINE(graph)
-        line.initialize(d=d,
+        line.initialize(d,
                         **kwargs)
         line.initialize_model(batch_size=batch_size,
                               lmbd1=lmbd1,

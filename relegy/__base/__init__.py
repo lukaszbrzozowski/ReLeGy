@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from functools import wraps
+from inspect import getfullargspec
+
 from networkx import Graph
 from numpy import ndarray
 
@@ -58,6 +61,7 @@ class Model(ABC):
 
     @staticmethod
     def _init_in_init_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             func(self, *args, **kwargs)
             self._update_init_in_init_fit()
@@ -65,6 +69,7 @@ class Model(ABC):
 
     @staticmethod
     def _fit_in_init_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             self._verify_init_in_fit()
             func(self, *args, **kwargs)
@@ -73,6 +78,7 @@ class Model(ABC):
 
     @staticmethod
     def _embed_in_init_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             self._verify_init_and_fit_in_embed()
             result = func(self, *args, **kwargs)
@@ -81,6 +87,7 @@ class Model(ABC):
 
     @staticmethod
     def _init_in_init_model_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             func(self, *args, **kwargs)
             self._update_init_in_init_model_fit()
@@ -88,6 +95,7 @@ class Model(ABC):
 
     @staticmethod
     def _init_model_in_init_model_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             self._verify_init_in_init_model()
             func(self, *args, **kwargs)
@@ -96,6 +104,7 @@ class Model(ABC):
 
     @staticmethod
     def _fit_in_init_model_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             self._verify_init_and_init_model_in_fit()
             func(self, *args, **kwargs)
@@ -104,11 +113,40 @@ class Model(ABC):
 
     @staticmethod
     def _embed_in_init_model_fit(func):
+        @wraps(func)
         def wrap(self, *args, **kwargs):
             self._verify_init_and_init_model_and_fit_in_embed()
             res = func(self, *args, **kwargs)
             return res
         return wrap
+
+    @staticmethod
+    def _verify_parameters(rules_dict: dict):
+        def inner_func(func):
+            @wraps(func)
+            def wrap(self, *args, **kwargs):
+                named_args = {
+                                **kwargs,
+                                **dict(
+                                    zip(
+                                        filter(
+                                            lambda x: x not in kwargs and x != 'self',
+                                            getfullargspec(func).args
+                                        ),
+                                        args
+                                    )
+                                )
+                }
+                print(named_args)
+                for key, rules in rules_dict.items():
+                    val = named_args[key]
+                    for rule, err_msg in rules:
+                        if not rule(val):
+                            raise Exception(err_msg)
+                res = func(self, *args, **kwargs)
+                return res
+            return wrap
+        return inner_func
 
     @abstractmethod
     def initialize(self): pass

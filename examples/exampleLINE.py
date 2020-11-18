@@ -3,11 +3,12 @@ import relegy.embeddings as emb
 
 G = nx.erdos_renyi_graph(200, 0.1)
 
-line = emb.LINE(G)
-line.initialize()
-line.initialize_model()
-line.fit()
-Z = line.embed()
+# line = emb.LINE(G)
+# line.initialize()
+# line.initialize_model()
+# line.fit()
+# Z = line.embed()
 
-Z = emb.LINE.fast_embed(G, d=20)
+Z = emb.LINE.fast_embed(G, d=-1)
+
 print(Z.shape)
