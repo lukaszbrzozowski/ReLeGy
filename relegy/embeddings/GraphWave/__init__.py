@@ -7,9 +7,20 @@ import tensorflow as tf
 
 
 class GraphWave(Model):
+    """
+    The GraphWave method implementation. \n
+    The details may be found in: \n
+    'C. Donnat, M. Zitnik, D. Hallac, and J. Leskovec. Learning structural node embeddings via diffusion wavelets. arXiv
+preprint arXiv:1710.10321, 2017.'
+    """
 
     def __init__(self,
                  graph: Graph):
+        """
+        GraphWave - constructor (step I)
+
+        @param graph: The graph to be embedded.
+        """
         super().__init__(graph)
         self.__J = None
         self.__eta = None
@@ -26,6 +37,15 @@ class GraphWave(Model):
                    eta: float = 0.85,
                    gamma: float = 0.95,
                    kernel = lambda x, s: tf.math.exp(-x * s)):
+        """
+        GraphWave - initialize (step II) \n
+        Calculates optimal kernel parameter and characteristic functions.
+
+        @param J: number of different kernel parameter values, as described in the article.
+        @param eta: kernel optimization parameter, as described in the article.
+        @param gamma: kernel optimization parameter, as described in the article.
+        @param kernel: kernel function of x and s using Tensorflow operations.
+        """
         graph = self.get_graph()
         self.__J = J
         self.__eta = eta
@@ -41,6 +61,14 @@ class GraphWave(Model):
             d: int = 2,
             interval_start: float = 0,
             interval_stop: float = 1):
+        """
+        GraphWave - fit (step III) \n
+        Generates the embedding.
+
+        @param d: The embedding dimension.
+        @param interval_start: Start of the interval from which points are chosen, as described in the article.
+        @param interval_stop: End of the interval from which points are chosen, as described in the article.
+        """
         t = tf.cast(tf.linspace(tf.constant(interval_start, "float32"),
                                 tf.constant(interval_stop, "float32"),
                                 d),
@@ -56,6 +84,11 @@ class GraphWave(Model):
 
     @Model._embed_in_init_fit
     def embed(self) -> ndarray:
+        """
+        GraphWave - embed (step IV) \n
+        Returns the embedding.
+        @return: The embedding matrix with shape N x (2*J*d)
+        """
         return self.__Z
 
     def info(self) -> str:
@@ -89,6 +122,22 @@ class GraphWave(Model):
                    interval_start: float = 0,
                    interval_stop: float = 1,
                    d: int = 2) -> ndarray:
+        """
+        GraphWave - fast_embed \n
+        Performs the embedding in a single step.
+
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param J: number of different kernel parameter values, as described in the article. Present in 'initialize'
+        @param eta: kernel optimization parameter, as described in the article. Present in 'initialize'
+        @param gamma: kernel optimization parameter, as described in the article. Present in 'initialize'
+        @param kernel: kernel function of x and s using Tensorflow operations. Present in 'initialize'
+        @param d: The embedding dimension. Present in 'fit'
+        @param interval_start: Start of the interval from which points are chosen, as described in the article. Present
+        in 'fit'
+        @param interval_stop: End of the interval from which points are chosen, as described in the article. Present in
+        'fit'
+        @return: The embedding matrix with shape N x (2*J*d)
+        """
         gw = GraphWave(graph)
         gw.initialize(J=J,
                       eta=eta,

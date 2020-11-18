@@ -10,9 +10,20 @@ from relegy.__base import Model
 
 
 class Struc2Vec(Model):
+    """
+    The Struc2Vec method implementation. \n
+    The details may be found in: \n
+    'L.F.R. Ribeiro, P.H.P. Saverese, and D.R. Figueiredo. struc2vec: Learning node representations from structural
+identity. In KDD, 2017.'
+    """
 
     def __init__(self,
                  graph: Graph):
+        """
+        Struc2Vec - constructor (step I)
+
+        @param graph: Graph to be embedded.
+        """
 
         super().__init__(graph)
         self.__d = None
@@ -32,6 +43,17 @@ class Struc2Vec(Model):
                    q: float = 0.3,
                    OPT1: bool = False,
                    OPT3_k: int = None):
+        """
+        Struc2Vec - initialize (step II) \n
+        Generates the multigraph.
+
+        @param T: length of a single random walk.
+        @param gamma: Number of random walks starting from a single vertex.
+        @param q: Probability of changing layers in the multigraph.
+        @param OPT1: If True, OPT1 optimization is used, as described in the article.
+        @param OPT3_k: If a number k is given instead of None, OPT3 optimization is used with parameter k, as described
+        in the article.
+        """
         graph = self.get_graph()
         self.__T = T
         self.__gamma = gamma
@@ -55,6 +77,18 @@ class Struc2Vec(Model):
                          window: int = 5,
                          hs: int = 1,
                          negative: int = 0):
+        """
+        Struc2Vec - initialize_model (step III) \n
+        Initializes the Word2Vec network model.
+
+        @param d: The embedding dimension.
+        @param alpha: The starting learning rate of the model, as described in gensim.Word2Vec documentation.
+        @param min_alpha: The minimal learning rate of the model, as described in gensim.Word2Vec documentation.
+        @param window: The window size of the network, as described in gensim.Word2Vec documentation.
+        @param hs: Must be 0 or 1. If 1, Hierarchical Softmax is used, as described in gensim.Word2Vec documentation.
+        @param negative: Number of samples for the Negative Sampling method, as described in gensim.Word2Vec
+        documentation. If 0, the Negative Sampling is not used.
+        """
         model = Word2Vec(alpha=alpha,
                          size=d,
                          min_alpha=min_alpha,
@@ -185,12 +219,23 @@ class Struc2Vec(Model):
 
     @Model._fit_in_init_model_fit
     def fit(self, num_iter=1000):
+        """
+        Struc2Vec - fit (step IV) \n
+        Trains the Word2Vec skipgram model.
+
+        @param num_iter: Number of iterations.
+        """
         self.__model.train(sentences=self.__rw,
                            total_examples=len(self.__rw),
                            epochs=num_iter)
 
     @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
+        """
+        Struc2Vec - embed (step V) \n
+        Returns the embedding matrix from the Word2Vec network.
+        @return: The embedding matrix.
+        """
         return self.__get_weights_from_model()
 
     @staticmethod
@@ -207,6 +252,31 @@ class Struc2Vec(Model):
                    hs: int = 1,
                    negative: int = 0,
                    num_iter=1000):
+        """
+        Struc2Vec - fast_embed \n
+        Performs the embedding in a single step.
+
+        @param graph: Graph to be embedded. Present in '__init__'
+        @param T: length of a single random walk. Present in 'initialize'
+        @param gamma: Number of random walks starting from a single vertex. Present in 'initialize'
+        @param q: Probability of changing layers in the multigraph. Present in 'initialize'
+        @param OPT1: If True, OPT1 optimization is used, as described in the article. Present in 'initialize'
+        @param OPT3_k: If a number k is given instead of None, OPT3 optimization is used with parameter k, as described
+        in the article. Present in 'initialize'
+        @param d: The embedding dimension. Present in 'initialize_model'
+        @param alpha: The starting learning rate of the model, as described in gensim.Word2Vec documentation.
+        Present in 'initialize_model'
+        @param min_alpha: The minimal learning rate of the model, as described in gensim.Word2Vec documentation. Present
+        in 'initialize_model'
+        @param window: The window size of the network, as described in gensim.Word2Vec documentation. Present in
+        'initialize_model'
+        @param hs: Must be 0 or 1. If 1, Hierarchical Softmax is used, as described in gensim.Word2Vec documentation.
+        Present in 'initialize_model'
+        @param negative: Number of samples for the Negative Sampling method, as described in gensim.Word2Vec
+        documentation. If 0, the Negative Sampling is not used. Present in 'initialize_model'
+        @param num_iter: Number of iterations. Present in 'fit'
+        @return: The embedding matrix.
+        """
         s2v = Struc2Vec(graph)
         s2v.initialize(T=T,
                        gamma=gamma,

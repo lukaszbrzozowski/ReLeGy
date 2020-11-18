@@ -9,10 +9,20 @@ from tensorflow.keras.layers import Layer
 
 
 class GCN(Model):
+    """
+    The GCN method implementation. \n
+    The details may be found in: \n
+    'T.N. Kipf and M. Welling. Semi-supervised classification with graph convolutional networks. In ICLR, 2016.'
+    """
 
     def __init__(self,
                  graph: Graph
                  ):
+        """
+        GCN - constructor (step I) \n
+
+        @param graph: The graph to be embedded.
+        """
         super().__init__(graph)
         self.__X = None
         self.__Y = None
@@ -51,6 +61,15 @@ class GCN(Model):
                    Y: ndarray,
                    Y_mask: ndarray = None,
                    X: ndarray = None):
+        """
+        GCN - initialize (step II) \n
+        Generates the matrices used in convolution.
+
+        @param Y: The vector of labels for vertices.
+        @param Y_mask: A binary vector masking the vertices from loss function calculation. Vertices corresponding to 1
+        are included in loss function calculation, vertices corresponding to 0 are not.
+        @param X: Matrix of features of vertices. Identity matrix passed if X is None.
+        """
 
         graph = self.get_graph()
 
@@ -74,7 +93,6 @@ class GCN(Model):
         else:
             self.__Y_mask = Y_mask
 
-
         A_hat = self.__A + sps.identity(self.__A.shape[0])
         D = sps.diags(A_hat.sum(axis=0).A1)
         D_sqrt_inv = D.sqrt().power(-1)
@@ -86,7 +104,15 @@ class GCN(Model):
     def initialize_model(self,
                          n_hid = None,
                          activations = None,
-                         lr = 0.01):
+                         lr: float = 0.01):
+        """
+        GCN - initialize_model (step III) \n
+        Initializes the Graph Convolutional Network model.
+
+        @param n_hid: list of numbers of neurons on each layer of the network.
+        @param activations: list of names of activation functions of each layer.
+        @param lr: learning rate.
+        """
         if n_hid is None:
             n_hid = np.array([self.__X.shape[1], self.__d])
         if activations is None:
@@ -122,8 +148,15 @@ class GCN(Model):
 
     @Model._fit_in_init_model_fit
     def fit(self,
-            num_iter=300,
-            verbose=True):
+            num_iter: int = 300,
+            verbose: bool = True):
+        """
+        GCN - fit (step IV) \n
+        Trains the GCN model.
+
+        @param num_iter: Number of iterations
+        @param verbose: Verbosity parameter
+        """
 
         accuracy = tf.keras.metrics.Accuracy()
         for i in range(num_iter):
@@ -137,6 +170,11 @@ class GCN(Model):
 
     @Model._embed_in_init_model_fit
     def embed(self):
+        """
+        GCN - embed (step V) \n
+        Returns the embedding matrix.
+        @return: The embedding matrix with shape N x d, where d is the number of unique labels.
+        """
         return self.__model(self.__X)
 
     @staticmethod
@@ -146,12 +184,29 @@ class GCN(Model):
                    X: ndarray = None,
                    n_hid = None,
                    activations = None,
-                   lr = 0.01,
-                   num_iter=300):
+                   lr: float = 0.01,
+                   num_iter: int = 300,
+                   fit_verbose=True):
+        """
+        GCN - fast_embed \n
+        Performs the embedding in a single step.
+
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param Y: The vector of labels for vertices. Present in 'initialize'
+        @param Y_mask: A binary vector masking the vertices from loss function calculation. Vertices corresponding to 1
+        are included in loss function calculation, vertices corresponding to 0 are not. Present in 'initialize'
+        @param X: Matrix of features of vertices. Identity matrix passed if X is None. Present in 'initialize'
+        @param n_hid: list of numbers of neurons on each layer of the network. Present in 'initialize_model'
+        @param activations: list of names of activation functions of each layer. Present in 'initialize_model'
+        @param lr: learning rate. Present in 'initialize_model'
+        @param num_iter: Number of iterations. Present in 'fit'
+        @param fit_verbose: Verbosity parameter. Present in 'fit'
+        @return: The embedding matrix with shape N x d, where d is the number of unique labels.
+        """
         gcn = GCN(graph)
         gcn.initialize(Y, Y_mask, X)
         gcn.initialize_model(n_hid, activations, lr)
-        gcn.fit(num_iter)
+        gcn.fit(num_iter, verbose=fit_verbose)
         return gcn.embed()
 
 

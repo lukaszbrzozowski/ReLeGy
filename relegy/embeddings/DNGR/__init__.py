@@ -8,9 +8,18 @@ from relegy.__base import Model
 
 
 class DNGR(Model):
-
+    """
+    The DNGR method implementation. \n
+    The details may be found in: \n
+    'S. Cao, W. Lu, and Q. Xu. Deep neural networks for learning graph representations. In AAAI, 2016.'
+    """
     def __init__(self,
                  graph: Graph):
+        """
+        DNGR - constructor (step I)
+
+        @param graph: The graph to be embedded.
+        """
 
         super().__init__(graph)
         self.__d = None
@@ -32,6 +41,13 @@ class DNGR(Model):
     def initialize(self,
                    alpha: float = 0.9,
                    T: int = 40):
+        """
+        DNGR - initialize (step II) \n
+        Calculates the PPMI matrix.
+
+        @param alpha: probability, that the random surfing will continue instead of coming back to the first vertex.
+        @param T: The length of a single random walk.
+        """
         self.__alpha = alpha
         self.__T = T
 
@@ -50,6 +66,21 @@ class DNGR(Model):
                          loss_fn: str = "mse",
                          batch_size: int = 32,
                          optimizer: str = "adam"):
+        """
+        DNGR - initialize_model (step III) \n
+        Sets values of the given parameters.
+
+        @param d: The embedding dimension.
+        @param n_layers: Number of layers of the Stacked Denoising Auto-Encoder.
+        @param n_hid: List of number of vertices in each layer.
+        @param dropout: Percentage of dropout vertices in each layer.
+        @param enc_act: Name/names of activation functions in the encoding layers.
+        @param dec_act: Name/names of activation functions in the decoding layers.
+        @param bias: Boolean value, if True, bias is present in the network.
+        @param loss_fn: Name of the loss function for the network.
+        @param batch_size: Batch size for the network.
+        @param optimizer: Name of the optimizer used in network learning.
+        """
         self.__d = d
         if n_hid is None:
             n_hid = d
@@ -106,6 +137,14 @@ class DNGR(Model):
             num_iter: int = 300,
             verbose: bool = True,
             random_state: int = None):
+        """
+        DNGR - fit (step IV) \n
+        Train the SDAE network layer by layer.
+
+        @param num_iter: Number of iterations.
+        @param verbose: Verbosity parameter.
+        @param random_state: Initial random state for training.
+        """
 
         if random_state is not None:
             np.random.seed(random_state)
@@ -128,6 +167,12 @@ class DNGR(Model):
 
     @Model._embed_in_init_model_fit
     def embed(self) -> ndarray:
+        """
+        DNGR - embed (step V) \n
+        Returns the embedding from the SDAE network.
+
+        @return: The embedding matrix.
+        """
         Z = self.__model.predict(self.__ppmi)
         return Z
 
@@ -149,6 +194,27 @@ class DNGR(Model):
                    fit_verbose: bool = True,
                    random_state: int = None
                    ) -> ndarray:
+        """
+        DNGR - fast_embed \n
+        Returns the embedding in a single step.
+
+        @param graph: The graph to be embedded. Present in '__init__'
+        @param alpha: probability, that the random surfing will continue instead of coming back to the first vertex. Present in 'initialize'
+        @param T: The length of a single random walk. Present in 'initialize'
+        @param d: The embedding dimension. Present in 'initialize_model'
+        @param n_layers: Number of layers of the Stacked Denoising Auto-Encoder. Present in 'initialize_model'
+        @param n_hid: List of number of vertices in each layer. Present in 'initialize_model'
+        @param dropout: Percentage of dropout vertices in each layer. Present in 'initialize_model'
+        @param enc_act: Name/names of activation functions in the encoding layers. Present in 'initialize_model'
+        @param dec_act: Name/names of activation functions in the decoding layers. Present in 'initialize_model'
+        @param bias: Boolean value, if True, bias is present in the network. Present in 'initialize_model'
+        @param loss_fn: Name of the loss function for the network. Present in 'initialize_model'
+        @param batch_size: Batch size for the network. Present in 'initialize_model'
+        @param optimizer: Name of the optimizer used in network learning. Present in 'initialize_model'
+        @param num_iter: Number of iterations. Present in 'fit'
+        @param fit_verbose: Verbosity parameter. Present in 'fit'
+        @param random_state: Initial random state for training. Present in 'fit'
+        """
         dngr = DNGR(graph)
         dngr.initialize(alpha=alpha,
                         T=T)
