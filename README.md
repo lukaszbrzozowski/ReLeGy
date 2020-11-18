@@ -6,6 +6,7 @@ The ReLeGy package offers multiple methods of embedding graph vertices into vect
 * HOPE
 * DeepWalk
 * Node2Vec
+* LINE
 * HARP for DeepWalk and Node2Vec
 * SDNE
 * DNGR
