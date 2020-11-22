@@ -3,7 +3,18 @@ import networkx as nx
 from networkx import Graph
 from relegy.__base import Model
 
-ddd = {"d":[(lambda d: d > 0, "d has to be greater than 0.")]}
+init_verification = {"d" : [(lambda d: d > 0, "d has to be greater than 0.")]}
+
+init_model_verification = {"batch_size": [(lambda x: x > 0, "batch_size must be greater than 0.")],
+                           "lmbd1": [(lambda x: x > 0, "lmbd1 must be greater than 0.")],
+                           "lmbd2": [(lambda x: x > 0, "lmbd2 must be greater than 0.")],
+                           "lr1": [(lambda x: x > 0, "lr1 must be greater than 0.")],
+                           "lr2": [(lambda x: x > 0, "lr2 must be greater than 0.")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0,")]}
+
+fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+
 
 class LINE(Model):
     """
@@ -38,7 +49,7 @@ class LINE(Model):
         self.__grad2 = None
 
     @Model._init_in_init_model_fit
-    @Model._verify_parameters(rules_dict=ddd)
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    d: int = 2,
                    **kwargs):
@@ -70,7 +81,7 @@ class LINE(Model):
                                  np.sum(self.__U2 @ self.__U2[j, :])) ** 2
 
     @Model._init_model_in_init_model_fit
-    @Model._verify_parameters(rules_dict={})
+    @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
                          batch_size: int = 30,
                          lmbd1: float = 1e-1,
@@ -94,7 +105,7 @@ class LINE(Model):
         self.__lr2 = lr2
 
     @Model._fit_in_init_model_fit
-    @Model._verify_parameters(rules_dict={})
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter: int = 400,
             verbose: bool = True):
@@ -140,6 +151,7 @@ class LINE(Model):
         raise NotImplementedError
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    d: int = 2,
                    batch_size: int = 30,

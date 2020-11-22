@@ -4,6 +4,7 @@ from inspect import getfullargspec
 
 from networkx import Graph
 from numpy import ndarray
+import itertools
 
 
 class Model(ABC):
@@ -147,6 +148,10 @@ class Model(ABC):
                 return res
             return wrap
         return inner_func
+
+    @staticmethod
+    def dict_union(*dicts):
+        return dict(itertools.chain.from_iterable(dct.items() for dct in dicts))
 
     @abstractmethod
     def initialize(self): pass
