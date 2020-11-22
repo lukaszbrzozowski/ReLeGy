@@ -126,7 +126,9 @@ class Model(ABC):
         def inner_func(func):
             @wraps(func)
             def wrap(self, *args, **kwargs):
-                named_args = dict(zip(reversed(getfullargspec(func).args), reversed(getfullargspec(func).defaults)))
+                func_args = fa if (fa := getfullargspec(func).args) is not None else []
+                func_defaults = fd if (fd := getfullargspec(func).defaults) is not None else []
+                named_args = dict(zip(reversed(func_args), reversed(func_defaults)))
                 named_args.update(kwargs)
                 for key, rules in rules_dict.items():
                     val = named_args[key]
