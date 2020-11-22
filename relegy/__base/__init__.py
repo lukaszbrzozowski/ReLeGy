@@ -126,19 +126,8 @@ class Model(ABC):
         def inner_func(func):
             @wraps(func)
             def wrap(self, *args, **kwargs):
-                named_args = {
-                                **kwargs,
-                                **dict(
-                                    zip(
-                                        filter(
-                                            lambda x: x not in kwargs and x != 'self',
-                                            getfullargspec(func).args
-                                        ),
-                                        args
-                                    )
-                                )
-                }
-                print(named_args)
+                named_args = dict(zip(reversed(getfullargspec(func).args), reversed(getfullargspec(func).defaults)))
+                named_args.update(kwargs)
                 for key, rules in rules_dict.items():
                     val = named_args[key]
                     for rule, err_msg in rules:
