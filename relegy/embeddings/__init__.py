@@ -11,3 +11,4 @@ from .GraphWave import GraphWave
 from .SDNE import SDNE
 from .DNGR import DNGR
 from .GCN import GCN
+from .GNN import GNN

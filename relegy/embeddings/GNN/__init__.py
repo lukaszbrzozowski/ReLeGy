@@ -10,7 +10,7 @@ from relegy.__base import Model
 
 SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 
-tf.disable_v2_behavior()
+#tf.disable_v2_behavior()
 
 
 # class for the core of the architecture
