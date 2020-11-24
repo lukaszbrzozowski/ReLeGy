@@ -10,9 +10,6 @@ from relegy.__base import Model
 
 SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 
-#tf.disable_v2_behavior()
-
-
 # class for the core of the architecture
 class GNN(Model):
     """
@@ -101,6 +98,8 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         @param mask_train: training masks.
 
         """
+        tf.disable_v2_behavior()
+
         self.input_dim = self.inp.shape[1]
         self.output_dim = self.labels.shape[1]
         self.state_dim = embed_dim
@@ -140,6 +139,7 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
             self.writer = tf.summary.FileWriter('tmp/' + param, self.session.graph)
         # self.saver = tf.train.Saver()
         # self.save_path = "tmp/" + param + "saves/__base.ckpt"
+        tf.enable_v2_behavior()
 
     @Model._fit_in_init_model_fit
     def fit(self, num_epoch=100):
@@ -149,6 +149,7 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
 
         @param num_epoch: Number of training epochs.
         """
+        tf.disable_v2_behavior()
         # train the __base
         count = 0
 
@@ -169,10 +170,14 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
 
             count = count + 1
 
+        tf.enable_v2_behavior()
+
     @Model._embed_in_init_model_fit
     def embed(self):
-
-        return self.__predict(self.inp, self.arcnode, self.labels)[2]
+        tf.disable_v2_behavior()
+        result = self.__predict(self.inp, self.arcnode, self.labels)[2]
+        tf.enable_v2_behavior()
+        return result
 
     @staticmethod
     def fast_embed(graph: Graph, idx_labels, embed_dim=4,
