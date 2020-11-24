@@ -86,8 +86,8 @@ class LINE(Model):
                          batch_size: int = 30,
                          lmbd1: float = 1e-1,
                          lmbd2: float = 1e-2,
-                         lr1: float = 1e-4,
-                         lr2: float = 1e-4):
+                         lr1: float = 1e-1,
+                         lr2: float = 1e-2):
         """
         LINE - initialize_model (step III) \n
         Sets the learning rate and regularization parameters values.
