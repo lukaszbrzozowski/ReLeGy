@@ -3,7 +3,7 @@ import networkx as nx
 from networkx import Graph
 from relegy.__base import Model
 
-init_verification = {"d" : [(lambda d: d > 0, "d has to be greater than 0.")]}
+init_verification = {"d": [(lambda d: d > 0, "d has to be greater than 0.")]}
 
 init_model_verification = {"batch_size": [(lambda x: x > 0, "batch_size must be greater than 0.")],
                            "lmbd1": [(lambda x: x > 0, "lmbd1 must be greater than 0.")],

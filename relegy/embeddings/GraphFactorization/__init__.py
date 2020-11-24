@@ -5,6 +5,16 @@ from numpy import ndarray
 from networkx import Graph
 import tensorflow as tf
 
+init_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
+                     "lmbd": [(lambda x: x >= 0, "'lmbd' must be non-negative")],}
+
+init_model_verification = {"lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0")]}
+
+fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+
+
 
 class GraphFactorization(Model):
     """
@@ -37,6 +47,7 @@ class GraphFactorization(Model):
         raise NotImplementedError
 
     @Model._init_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    d: int = 2,
                    lmbd: float = 0.1):
@@ -70,6 +81,7 @@ class GraphFactorization(Model):
         return g
 
     @Model._init_model_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
                          optimizer: str = "adam",
                          lr: float = 0.1,
@@ -93,6 +105,7 @@ class GraphFactorization(Model):
             print("The model has been built")
 
     @Model._fit_in_init_model_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter: int = 300,
             verbose: bool = True):
@@ -124,6 +137,7 @@ class GraphFactorization(Model):
         return self.__model(tf.eye(self.__N)).numpy()
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    d: int = 2,
                    lmbd: float = 0.1,

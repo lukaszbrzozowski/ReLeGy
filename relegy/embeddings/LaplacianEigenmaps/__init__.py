@@ -8,6 +8,14 @@ from networkx import Graph
 from numpy import ndarray
 from scipy.optimize import minimize
 
+init_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0.")],
+                    "ftol": [(lambda x: x > 0, "'ftol' must be greater than 0.")]}
+
+fast_embed_verification = Model.dict_union(init_verification, fit_verification)
+
+
 
 class LaplacianEigenmaps(Model):
     """
@@ -37,6 +45,7 @@ class LaplacianEigenmaps(Model):
         self.__result = None
 
     @Model._init_in_init_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    d: int = 2
                    ):
@@ -68,6 +77,7 @@ class LaplacianEigenmaps(Model):
         raise NotImplementedError
 
     @Model._fit_in_init_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter: int = 200,
             ftol: float = 1e-7,
@@ -104,6 +114,7 @@ class LaplacianEigenmaps(Model):
         return self.__result
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    d: int = 2,
                    num_iter: int = 200,

@@ -5,6 +5,15 @@ import numpy as np
 from numpy import ndarray
 import tensorflow as tf
 
+init_verification = {"J": [(lambda x: x >= 1, "'J' must be at least 1.")],
+                     "eta": [(lambda x: 0 < x <= 1, "'eta' must be in range (0, 1]")],
+                     "gamma": [(lambda x: 0 < x <= 1, "'gamma' must be in range (0, 1]")]}
+
+fit_verification = {"d": [(lambda x: x > 0, "d must be greater than 0.")]}
+
+fast_embed_verification = Model.dict_union(init_verification, fit_verification)
+
+
 
 class GraphWave(Model):
     """
@@ -32,6 +41,7 @@ preprint arXiv:1710.10321, 2017.'
         self.__Z = None
 
     @Model._init_in_init_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    J: int = 1,
                    eta: float = 0.85,
@@ -57,6 +67,7 @@ preprint arXiv:1710.10321, 2017.'
         self.__thetas = tf.cast(self.__calculate_theta(), "complex64")
 
     @Model._fit_in_init_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             d: int = 2,
             interval_start: float = 0,
@@ -114,6 +125,7 @@ preprint arXiv:1710.10321, 2017.'
         return s
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    J: int = 1,
                    eta: float = 0.85,

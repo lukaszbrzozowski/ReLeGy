@@ -5,6 +5,9 @@ import numpy as np
 
 import tensorflow as tf
 
+universal_verification = {"d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
+
+
 
 class HOPE(Model):
     """
@@ -116,6 +119,7 @@ class HOPE(Model):
         raise NotImplementedError
 
     @Model._fit_in_init_fit
+    @Model._verify_parameters(rules_dict=universal_verification)
     def fit(self,
             d=None):
         """
@@ -142,6 +146,7 @@ class HOPE(Model):
             self.__SVDs = (D, U, VT)
 
     @Model._embed_in_init_fit
+    @Model._verify_parameters(rules_dict=universal_verification)
     def embed(self,
               d=2,
               concatenated=True):
@@ -170,6 +175,7 @@ class HOPE(Model):
             return tf.matmul(tf.transpose(Us), Ut).numpy()
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=universal_verification)
     def fast_embed(graph: Graph,
                    proximity: str = "Katz",
                    d: int = 2,
