@@ -7,8 +7,7 @@ import tensorflow as tf
 import scipy.sparse as sps
 from tensorflow.keras.layers import Layer
 
-init_model_verification = {"n_hid": [(lambda x: np.all(np.array(x) > 0), "Every element of 'n_hid' must be greater than 0.")],
-                           "lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
+init_model_verification = {"lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0")]}
 
