@@ -4,6 +4,16 @@ import networkx as nx
 from networkx import Graph
 import tensorflow as tf
 
+init_verification = {"lmbd": [(lambda x: x > 0, "'lmbd' must be greater than 0.")]}
+
+fit_verification = {"max_K": [(lambda x: x >= 1, "'max_K' must be at least 1.")],
+                    "d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
+
+embed_verification = {"K": [(lambda x: x >= 1, "'K' must be at least 1.")],
+                      "d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
+
+fast_embed_verification = Model.dict_union(init_verification, embed_verification)
+
 
 class GraRep(Model):
     """
@@ -11,6 +21,7 @@ class GraRep(Model):
     The details may be found in: \n
     'S. Cao, W. Lu, and Q. Xu. Grarep: Learning graph representations with global structural information. In KDD, 2015'
     """
+
     def __init__(self,
                  graph: Graph,
                  keep_full_SVD: bool = True):
@@ -42,6 +53,7 @@ class GraRep(Model):
         self.__max_K = 0
 
     @Model._init_in_init_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    lmbd: float = 1):
         """
@@ -54,13 +66,14 @@ class GraRep(Model):
         graph = self.get_graph()
         self.__lmbd = tf.constant(lmbd, dtype="float32")
         self.__N = len(graph.nodes)
-        self.__beta = tf.constant(self.__lmbd/self.__N, dtype="float32")
+        self.__beta = tf.constant(self.__lmbd / self.__N, dtype="float32")
         self.__A = tf.convert_to_tensor(nx.to_numpy_array(graph, nodelist=np.arange(len(graph.nodes))), dtype="float32")
         self.__D = tf.linalg.diag(tf.pow(tf.reduce_sum(self.__A, 1), -1))
         self.__S = tf.matmul(self.__D, self.__A)
         self.__S_cur = tf.eye(self.__N, dtype="float32")
 
     @Model._fit_in_init_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             max_K=1,
             d=None):
@@ -79,10 +92,10 @@ class GraRep(Model):
             if d is None:
                 raise Exception("The 'd' parameter cannot be None when 'keep_full_SVD' is false")
             self.__results = []
-            for i in range(1, max_K+1):
+            for i in range(1, max_K + 1):
                 self.__S_cur = tf.matmul(self.__S_cur, self.__S)
                 gamma = tf.repeat(tf.reshape(tf.reduce_sum(self.__S_cur, 0), shape=[self.__N, 1]), [self.__N], axis=1)
-                X = tf.math.log(self.__S_cur/gamma) - tf.math.log(self.__beta)
+                X = tf.math.log(self.__S_cur / gamma) - tf.math.log(self.__beta)
                 X = tf.where(X < 0, tf.zeros_like(X), X)
                 D, U, VT = tf.linalg.svd(X)
                 Ud = U[:, :d]
@@ -94,7 +107,7 @@ class GraRep(Model):
             if cur_K >= max_K:
                 return
             else:
-                for i in range(cur_K+1, max_K+1):
+                for i in range(cur_K + 1, max_K + 1):
                     self.__S_cur = tf.matmul(self.__S_cur, self.__S)
                     gamma = tf.repeat(tf.reshape(tf.reduce_sum(self.__S_cur, 0), shape=[self.__N, 1]), [self.__N],
                                       axis=1)
@@ -104,6 +117,7 @@ class GraRep(Model):
                     self.__SVDs.append((D, U, VT))
 
     @Model._embed_in_init_fit
+    @Model._verify_parameters(rules_dict=embed_verification)
     def embed(self,
               K=1,
               d=2,
@@ -140,6 +154,7 @@ class GraRep(Model):
             return [retList[i].numpy() for i in range(K)]
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    d: int = 2,
                    K: int = 1,
@@ -162,4 +177,3 @@ class GraRep(Model):
         GR.fit(max_K=K,
                d=d)
         return GR.embed(K=K, concatenated=concatenated)
-

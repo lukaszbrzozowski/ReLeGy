@@ -6,6 +6,17 @@ import tensorflow as tf
 import numpy as np
 from tensorflow_addons.losses import metric_learning
 
+init_verification = {"alpha": [(lambda d: d >= 0, "'alpha' must be non-negative.")],
+                     "beta": [(lambda d: d >= 0, "'beta' must be non-negative.")],
+                     "nu": [(lambda d: d >= 0, "'nu' must be non-negative.")]}
+
+init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
+                           "lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0,")]}
+
+fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+
 
 class SDNE(Model):
     """
@@ -36,6 +47,7 @@ class SDNE(Model):
         self.__optimizer = None
 
     @Model._init_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    alpha: float = 1,
                    beta: float = 0.3,
@@ -57,6 +69,7 @@ class SDNE(Model):
         self.__B = tf.add(tf.multiply(self.__A, self.__beta), tf.ones([self.__N, self.__N]))
 
     @Model._init_model_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
                          d: int = 2,
                          n_layers: int = 2,
@@ -138,6 +151,7 @@ class SDNE(Model):
         return self.__model(self.__A).numpy()
 
     @Model._fit_in_init_model_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter=300,
             verbose=False
@@ -166,6 +180,7 @@ class SDNE(Model):
         return self.__get_nth_layer_output(self.__model, self.__K - 2).numpy()
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    alpha: float = 1,
                    beta: float = 0.3,

@@ -7,6 +7,12 @@ import tensorflow as tf
 import scipy.sparse as sps
 from tensorflow.keras.layers import Layer
 
+init_model_verification = {"n_hid": [(lambda x: np.all(np.array(x) > 0), "Every element of 'n_hid' must be greater than 0.")],
+                           "lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0")]}
+
+fast_embed_verification = Model.dict_union(init_model_verification, fit_verification)
 
 class GCN(Model):
     """
@@ -101,6 +107,7 @@ class GCN(Model):
         self.__A_weighted = tf.convert_to_tensor(result.toarray().astype(np.float32))
 
     @Model._init_model_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
                          n_hid = None,
                          activations = None,
@@ -144,6 +151,7 @@ class GCN(Model):
         return g
 
     @Model._fit_in_init_model_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter: int = 300,
             verbose: bool = True):
@@ -175,6 +183,7 @@ class GCN(Model):
         return self.__model(self.__X)
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    Y: ndarray,
                    Y_mask: ndarray = None,

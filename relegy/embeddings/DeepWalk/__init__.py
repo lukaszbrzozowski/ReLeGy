@@ -8,6 +8,22 @@ import tensorflow_probability as tfp
 from gensim.models import word2vec
 
 
+init_verification = {"T" : [(lambda x: x > 0, "'T' must be greater than 0.")],
+                     "gamma" : [(lambda x: x > 0, "'gamma' must be greater than 0.")]}
+
+init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
+                           "alpha": [(lambda x: x > 0, "'alpha' must be greater than 0.")],
+                           "min_alpha": [(lambda x: x > 0, "'min_alpha' must be greater than 0.")],
+                           "window": [(lambda x: x > 0, "'window' must be greater than 0.")],
+                           "hs": [(lambda x: 0 <= x <= 1, "'hs' must be boolean or either 0 or 1")],
+                           "negative": [(lambda x: x >= 0, "'negative' must be non-negative")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0")]}
+
+fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+
+
+
 class DeepWalk(Model):
     """
     The DeepWalk method implementation. \n
@@ -33,6 +49,7 @@ class DeepWalk(Model):
         self.__d = None
 
     @Model._init_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    T: int = 40,
                    gamma: int = 1):
@@ -51,6 +68,7 @@ class DeepWalk(Model):
         self.__rw = self.__generate_random_walks()
 
     @Model._init_model_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
                          d: int = 2,
                          alpha: float = 0.025,
@@ -107,6 +125,7 @@ class DeepWalk(Model):
         return self.__rw
 
     @Model._fit_in_init_model_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter=300):
         """
@@ -131,6 +150,7 @@ class DeepWalk(Model):
         return ret_matrix
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    T: int = 40,
                    gamma: int = 1,

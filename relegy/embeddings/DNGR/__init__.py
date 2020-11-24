@@ -6,6 +6,20 @@ from numpy import ndarray
 from relegy.__helpers.sdae import SDAE
 from relegy.__base import Model
 
+init_verification = {"T": [(lambda x: x > 0, "'T' must be greater than 0.")],
+                     "alpha": [(lambda x: 0 <= x <= 1, "'alpha' must be in range [0, 1].")]}
+
+init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
+                           "n_layers": [(lambda x: x > 0, "'n_layers' must be greater than 0.")],
+                           "n_hid": [(lambda x: True if x is None else np.all(x), "Every element of 'n_hid' must be greater than 0.")],
+                           "dropout": [(lambda x: np.all(x) >= 0, "Every element of 'dropout' must be non-negative")],
+                           "bias": [(lambda x: (x == 0) or (x == 1), "'bias' must be greater than boolean or either 0 or 1")],
+                           "batch_size": [(lambda x: x > 0, "'batch_size' must be greater than 0")]}
+
+fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0")]}
+
+fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+
 
 class DNGR(Model):
     """
@@ -38,6 +52,7 @@ class DNGR(Model):
         self.__optimizer = None
 
     @Model._init_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_verification)
     def initialize(self,
                    alpha: float = 0.9,
                    T: int = 40):
@@ -55,6 +70,7 @@ class DNGR(Model):
         self.__ppmi = self.__get_ppmi(rs)
 
     @Model._init_model_in_init_model_fit
+    @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
                          d: int = 2,
                          n_layers: int = 1,
@@ -130,6 +146,7 @@ class DNGR(Model):
         return PPMI
 
     @Model._fit_in_init_model_fit
+    @Model._verify_parameters(rules_dict=fit_verification)
     def fit(self,
             num_iter: int = 300,
             verbose: bool = True,
@@ -174,6 +191,7 @@ class DNGR(Model):
         return Z
 
     @staticmethod
+    @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,
                    alpha: float = 0.9,
                    T: int = 40,
