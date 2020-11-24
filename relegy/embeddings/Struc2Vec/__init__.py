@@ -168,9 +168,6 @@ identity. In KDD, 2017.'
         row_sums = [np.repeat(np.sum(w, axis=1).reshape(-1, 1), w.shape[0], axis=1) for w in no_diag]
         return np.array(no_diag) / np.array(row_sums)
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     def __generate_random_walks(self, w_in, w_f):
         Z = self.__generate_normalization(w_in)
         N = len(self.get_graph().nodes)

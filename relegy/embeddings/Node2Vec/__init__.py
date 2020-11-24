@@ -108,9 +108,6 @@ class Node2Vec(Model):
             raise Exception("Cannot be used before the 'initialize' step")
         return self.__rw
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @Model._init_model_in_init_model_fit
     def initialize_model(self,
                          d: int = 2,

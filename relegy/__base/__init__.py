@@ -1,9 +1,11 @@
 from abc import ABC, abstractmethod
 from functools import wraps
-from inspect import getfullargspec
+from inspect import getfullargspec, getmembers, signature
+import inspect
 
 from networkx import Graph
 from numpy import ndarray
+from .info import info_dict
 import itertools
 
 
@@ -153,9 +155,52 @@ class Model(ABC):
     @abstractmethod
     def embed(self) -> ndarray: pass
 
-    @abstractmethod
-    def info(self): pass
+    def info(self):
+        name = type(self).__name__
+        print(info_dict[name])
+        function_dict = dict(getmembers(type(self)))
+        df_values = []
+        # __init__
+        sig_init = signature(function_dict["__init__"])
+        for value in sig_init.parameters.values():
+            if value.name != 'self': df_values.append((value.name, value.default, value.annotation, "__init__"))
+        # initialize
+        sig_initialize = signature(function_dict["initialize"])
+        for value in sig_initialize.parameters.values():
+            if value.name != 'self': df_values.append((value.name, value.default, value.annotation, "initialize"))
+        # initialize_model if possible
+        if "initialize_model" in function_dict:
+            sig_initialize_model = signature(function_dict["initialize_model"])
+            for value in sig_initialize_model.parameters.values():
+                if value.name != 'self': df_values.append((value.name, value.default, value.annotation, "initialize_model"))
+        # fit
+        sig_fit = signature(function_dict["fit"])
+        for value in sig_fit.parameters.values():
+            if value.name != 'self': df_values.append((value.name, value.default, value.annotation, "fit"))
+        # embed
+        sig_embed = signature(function_dict["embed"])
+        for value in sig_embed.parameters.values():
+            if value.name != 'self': df_values.append((value.name, value.default, value.annotation, "embed"))
 
+        self.__print_info_table(df_values)
+
+        return
+
+    def __print_info_table(self, df_values):
+        print("".join(["="] * 108))
+        print(f"|{'parameter name':20s}|{'default value':25s}|{'annotated type':42s}|{'stage':16s}|")
+        print("".join(["="] * 108))
+        for name, default, annotation, stage in df_values:
+            if default is inspect._empty:
+                str_default = "no default"
+            else:
+                str_default = str_default if len(str_default := str(default)) <= 25 else str_default[0:7] + "..." + str_default[-15:]
+            if annotation is inspect._empty:
+                short_annotation = "no annotation"
+            else:
+                short_annotation = annotation.__module__ + "." + annotation.__name__
+            print(f"|{name:20s}|{str_default:25s}|{short_annotation:42s}|{stage:16s}|")
+            print("".join(["-"] * 108))
     @staticmethod
     @abstractmethod
     def fast_embed(graph: Graph) -> ndarray: pass

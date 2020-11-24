@@ -13,8 +13,6 @@ SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 tf.disable_v2_behavior()
 
 
-
-
 # class for the core of the architecture
 class GNN(Model):
     """
@@ -23,6 +21,7 @@ class GNN(Model):
     'Scarselli, F., Gori, M., Tsoi, A., Hagenbuchner, M. & Monfardini, G. 2009, 'The graph neural network model', IEEE Transactions on
 Neural Networks, vol. 20, no. 1, pp. 61-80.'
     """
+
     def __init__(self, graph: nx.Graph):
         """
         GNN -- constructor (step I)
@@ -78,12 +77,12 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         self.graphnode = graphnode
         self.labels = labels
 
-
     @Model._init_model_in_init_model_fit
     def initialize_model(self, embed_dim=4,
-                   max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01, graph_based=False,
-                   param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False,
-                   mask_flag=True, mask_test=None, mask_train=None):
+                         max_it=50, optimizer=tf.train.AdamOptimizer, learning_rate=0.01, threshold=0.01,
+                         graph_based=False,
+                         param=str(time.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')), config=None, tensorboard=False,
+                         mask_flag=True, mask_test=None, mask_train=None):
         """
         GNN - initialize_model (step III) \n
         Initializes the Graph Neural Network model.
@@ -182,7 +181,8 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
                    mask_flag=True, mask_train=None, mask_test=None, num_epoch=100):
         gnn = GNN(graph)
         gnn.initialize(idx_labels)
-        gnn.initialize_model(embed_dim, max_it, optimizer, learning_rate, threshold, graph_based, param, config, tensorboard, mask_flag, mask_train, mask_test)
+        gnn.initialize_model(embed_dim, max_it, optimizer, learning_rate, threshold, graph_based, param, config,
+                             tensorboard, mask_flag, mask_train, mask_test)
         gnn.fit(num_epoch)
         return gnn.embed()
 
@@ -502,9 +502,6 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
               self.ArcNode: arcnode_}
         pr = self.session.run([self.loss_op], feed_dict=fd)
         return pr[0]
-
-    def info(self):
-        pass
 
 
 class Net:

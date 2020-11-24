@@ -106,9 +106,6 @@ class DeepWalk(Model):
             raise Exception("Cannot be used before the 'initialize' step")
         return self.__rw
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @Model._fit_in_init_model_fit
     def fit(self,
             num_iter=300):

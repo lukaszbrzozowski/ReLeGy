@@ -99,9 +99,6 @@ class DNGR(Model):
         self.__batch_size = batch_size
         self.__optimizer = optimizer
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     def __random_surf(self) -> ndarray:
         A = nx.to_numpy_array(self.get_graph(), nodelist=np.arange(len(self.get_graph().nodes)))
         scaled_A = self.__scale_sim_mat(A)

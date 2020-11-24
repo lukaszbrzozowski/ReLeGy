@@ -139,9 +139,6 @@ class GraRep(Model):
             # noinspection PyUnresolvedReferences
             return [retList[i].numpy() for i in range(K)]
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @staticmethod
     def fast_embed(graph: Graph,
                    d: int = 2,

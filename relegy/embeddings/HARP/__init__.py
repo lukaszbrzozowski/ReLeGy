@@ -235,9 +235,6 @@ arXiv:1706.07845, 2017.'
         else:
             raise ValueError("None of the number of graphs L or node number threshold were specified")
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     def __generate_random_walks(self, G):
         random_walks = None
         if self.__method == "DeepWalk":

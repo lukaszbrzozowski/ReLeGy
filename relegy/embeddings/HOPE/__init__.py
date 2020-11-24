@@ -112,9 +112,6 @@ class HOPE(Model):
         else:
             return self.__proximity_aa()
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @Model._fit_in_init_fit
     def fit(self,
             d=None):

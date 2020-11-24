@@ -91,9 +91,6 @@ preprint arXiv:1710.10321, 2017.'
         """
         return self.__Z
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     def __calculate_theta(self):
         u, v = tf.linalg.eigh(self.__L)
         s = self.__calculate_s(u)

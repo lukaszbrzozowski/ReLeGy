@@ -64,9 +64,6 @@ class LaplacianEigenmaps(Model):
                                                                            lambda Y: np.sum((Y.T @ D @ Y - Id) ** 2)),
                                                                        "jac": self.__flat(lambda Y: 2 * D @ Y)}
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @Model._fit_in_init_fit
     def fit(self,
             num_iter: int = 200,

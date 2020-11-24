@@ -147,9 +147,6 @@ class LINE(Model):
         """
         return np.c_[self.__U1, self.__U2]
 
-    def info(self):
-        raise NotImplementedError
-
     @staticmethod
     @Model._verify_parameters(rules_dict=fast_embed_verification)
     def fast_embed(graph: Graph,

@@ -102,9 +102,6 @@ class SDNE(Model):
         self.__model = model
         self.__model.compile(optimizer=optimizer)
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     def __get_nth_layer_output(self, model, n):
         partial = tf.keras.Model(model.inputs, model.layers[n].output)
         return partial(self.__A, training=False)

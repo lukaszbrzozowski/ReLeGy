@@ -33,9 +33,6 @@ class GraphFactorization(Model):
 
         super().__init__(graph)
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @Model._init_in_init_model_fit
     def initialize(self,
                    d: int = 2,

@@ -143,9 +143,6 @@ class GCN(Model):
         g = tape.gradient(L, model.variables)
         return g
 
-    def info(self) -> str:
-        raise NotImplementedError
-
     @Model._fit_in_init_model_fit
     def fit(self,
             num_iter: int = 300,
