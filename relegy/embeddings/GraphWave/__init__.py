@@ -28,7 +28,8 @@ preprint arXiv:1710.10321, 2017.'
         """
         GraphWave - constructor (step I)
 
-        @param graph: The graph to be embedded.
+        @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
+        the number of vertices.
         """
         super().__init__(graph)
         self.__J = None

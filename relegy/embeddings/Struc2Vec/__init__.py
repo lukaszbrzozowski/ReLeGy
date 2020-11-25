@@ -38,7 +38,8 @@ identity. In KDD, 2017.'
         """
         Struc2Vec - constructor (step I)
 
-        @param graph: Graph to be embedded.
+        @param graph: Graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
+        the number of vertices.
         """
 
         super().__init__(graph)

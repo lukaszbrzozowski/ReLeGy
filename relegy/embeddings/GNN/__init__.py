@@ -23,7 +23,8 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         """
         GNN -- constructor (step I)
 
-        @param graph: The graph to be embedded.
+        @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
+        the number of vertices.
         create GNN instance. Feed this parameters:
         :net:  Net instance - it contains state network, output network, initialized weights, loss function and metric;
         :input_dim: dimension of the input
