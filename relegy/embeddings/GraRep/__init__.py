@@ -31,7 +31,8 @@ class GraRep(Model):
         """
         GraRep - constructor (step I)
 
-        @param graph: The graph to be embedded.
+        @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
+        the number of vertices.
         @param keep_full_SVD: if True, the GraRep instance keeps full SVDs decomposition in memory. This allows for fast
          calculation of embedding after fitting for different values of 'd'. If False, 'd' must be provided during
          fitting and cannot be changed in the 'embed' method.

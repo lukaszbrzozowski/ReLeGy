@@ -31,7 +31,8 @@ class LINE(Model):
                  graph: Graph):
         """
         LINE - constructor (step I)
-        @param graph: The graph to be embedded
+        @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
+        the number of vertices.
         """
         super().__init__(graph.to_directed())
         self.__d = None
@@ -157,8 +158,8 @@ class LINE(Model):
                    batch_size: int = 30,
                    lmbd1: float = 1e-1,
                    lmbd2: float = 1e-2,
-                   lr1: float = 1e-4,
-                   lr2: float = 1e-4,
+                   lr1: float = 1e-1,
+                   lr2: float = 1e-2,
                    num_iter: int = 400,
                    fit_verbose: bool = True,
                    **kwargs):
