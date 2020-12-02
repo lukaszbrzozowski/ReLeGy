@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="ReLeGy", # Replace with your own username
+    name="ReLeGy-lukaszbrzozowski", # Replace with your own username
     version="0.0.1",
     author="Łukasz Brzozowski, Kacper Siemaszko",
     author_email="author@example.com",
