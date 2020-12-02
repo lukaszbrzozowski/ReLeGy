@@ -50,8 +50,8 @@ def precision_at_k(similarity_matrix, obtained_matrix):
 def average_precision(similarity_vector, obtained_vector):
     """
     Average precision of prediction
-    :param similarity_vector: The approximated matrix, usually the adjacency matrix of a graph
-    :param obtained_vector: The matrix obtained with a representation method
+    :param similarity_vector: The approximated vector, usually a column from the adjacency matrix of a graph
+    :param obtained_vector: The vector obtained with a representation method
     :return: The value of NRMSE
     """
     prec_k = precision_at_k(similarity_vector, obtained_vector)
