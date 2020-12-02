@@ -7,7 +7,6 @@ keras~=2.4.3
 six~=1.15.0
 tensorflow~=2.3.0
 fastdtw~=0.3.4
-tqdm~=4.50.2
 tensorflow-probability~=0.11.1
 tensorflow-addons~=0.11.2
 

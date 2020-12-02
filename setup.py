@@ -3,6 +3,10 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+    requirements = [req for req in requirements if req.split('~=')[0] not in ['gensim','six','fastdtw','tensorflow-probability','tensorflow-addons']]
+
 setuptools.setup(
     name="relegy", # Replace with your own username
     version="0.0.1",
@@ -19,4 +23,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.8',
+    requirements=requirements
 )
