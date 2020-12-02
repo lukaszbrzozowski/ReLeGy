@@ -6,6 +6,8 @@ import tensorflow as tf
 import numpy as np
 from tensorflow_addons.losses import metric_learning
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"alpha": [(lambda d: d >= 0, "'alpha' must be non-negative.")],
                      "beta": [(lambda d: d >= 0, "'beta' must be non-negative.")],
                      "nu": [(lambda d: d >= 0, "'nu' must be non-negative.")]}
@@ -15,7 +17,7 @@ init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0."
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0,")]}
 
-fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, init_model_verification, fit_verification)
 
 
 class SDNE(Model):
@@ -25,6 +27,7 @@ class SDNE(Model):
     'D. Wang, P. Cui, and W. Zhu. Structural deep network embedding. In KDD, 2016.'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """

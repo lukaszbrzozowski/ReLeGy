@@ -7,9 +7,10 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 from gensim.models import word2vec
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
 
-init_verification = {"T" : [(lambda x: x > 0, "'T' must be greater than 0.")],
-                     "gamma" : [(lambda x: x > 0, "'gamma' must be greater than 0.")]}
+init_verification = {"T": [(lambda x: x > 0, "'T' must be greater than 0.")],
+                     "gamma": [(lambda x: x > 0, "'gamma' must be greater than 0.")]}
 
 init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
                            "alpha": [(lambda x: x > 0, "'alpha' must be greater than 0.")],
@@ -20,8 +21,7 @@ init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0."
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0")]}
 
-fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
-
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, init_model_verification, fit_verification)
 
 
 class DeepWalk(Model):
@@ -31,6 +31,7 @@ class DeepWalk(Model):
     'B. Perozzi, R. Al-Rfou, and S. Skiena. Deepwalk: Online learning of social representations. In KDD, 2014'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """
@@ -182,7 +183,7 @@ class DeepWalk(Model):
         @param num_iter: Number of iterations of the training. Present in 'fit'
         @return: The embedding matrix.
         """
-        dw = DeepWalk(graph)
+        dw = DeepWalk(graph=graph)
         dw.initialize(T=T,
                       gamma=gamma)
         dw.initialize_model(d=d,
@@ -193,5 +194,3 @@ class DeepWalk(Model):
                             negative=negative)
         dw.fit(num_iter=num_iter)
         return dw.embed()
-
-

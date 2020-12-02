@@ -4,6 +4,8 @@ import networkx as nx
 from networkx import Graph
 import tensorflow as tf
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"lmbd": [(lambda x: x > 0, "'lmbd' must be greater than 0.")]}
 
 fit_verification = {"max_K": [(lambda x: x >= 1, "'max_K' must be at least 1.")],
@@ -12,7 +14,7 @@ fit_verification = {"max_K": [(lambda x: x >= 1, "'max_K' must be at least 1.")]
 embed_verification = {"K": [(lambda x: x >= 1, "'K' must be at least 1.")],
                       "d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
 
-fast_embed_verification = Model.dict_union(init_verification, embed_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, embed_verification)
 
 
 class GraRep(Model):
@@ -22,6 +24,7 @@ class GraRep(Model):
     'S. Cao, W. Lu, and Q. Xu. Grarep: Learning graph representations with global structural information. In KDD, 2015'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph,
                  keep_full_SVD: bool = True):

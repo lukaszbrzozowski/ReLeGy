@@ -14,6 +14,13 @@ def test_laplacian_eigenmaps_result_has_expected_shape():
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
+def test_laplacian_eigenmaps_walk_parameter_verification():
+    graph = None
+    try:
+        m = LaplacianEigenmaps(graph)
+        assert False
+    except Exception:
+        assert True
 # def test_laplacian_eigenmaps_consistent_embedding_with_identical_random_state():
 #     for graph in examplesDict.values():
 #         model1 = LaplacianEigenmaps(graph, random_state=2137)

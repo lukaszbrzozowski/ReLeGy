@@ -14,6 +14,13 @@ def test_struc2vec_result_has_expected_shape():
         n = len(graph.nodes)
         assert Z.shape == (n, 1+d)
 
+def test_struc2vec_walk_parameter_verification():
+    graph = None
+    try:
+        m = Struc2Vec(graph)
+        assert False
+    except Exception:
+        assert True
 # def test_struc2vec_consistent_embedding_with_identical_random_state():
 #     for graph in examplesDict.values():
 #         model1 = Struc2Vec(graph, random_state=2137)

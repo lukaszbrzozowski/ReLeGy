@@ -8,6 +8,8 @@ from numpy import ndarray
 from .info import info_dict
 import itertools
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 
 class Model(ABC):
 
@@ -127,17 +129,19 @@ class Model(ABC):
     def _verify_parameters(rules_dict: dict):
         def inner_func(func):
             @wraps(func)
-            def wrap(self, *args, **kwargs):
+            def wrap(*args, **kwargs):
                 func_args = fa if (fa := getfullargspec(func).args) is not None else []
                 func_defaults = fd if (fd := getfullargspec(func).defaults) is not None else []
+                unnamed_args = dict(zip(func_args, args))
                 named_args = dict(zip(reversed(func_args), reversed(func_defaults)))
+                named_args.update(unnamed_args)
                 named_args.update(kwargs)
                 for key, rules in rules_dict.items():
                     val = named_args[key]
                     for rule, err_msg in rules:
                         if not rule(val):
                             raise Exception(err_msg)
-                res = func(self, *args, **kwargs)
+                res = func(*args, **kwargs)
                 return res
             return wrap
         return inner_func
@@ -201,6 +205,7 @@ class Model(ABC):
                 short_annotation = annotation.__module__ + "." + annotation.__name__
             print(f"|{name:20s}|{str_default:25s}|{short_annotation:42s}|{stage:16s}|")
             print("".join(["-"] * 108))
+
     @staticmethod
     @abstractmethod
     def fast_embed(graph: Graph) -> ndarray: pass

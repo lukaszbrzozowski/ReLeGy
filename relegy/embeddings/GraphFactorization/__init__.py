@@ -5,15 +5,16 @@ from numpy import ndarray
 from networkx import Graph
 import tensorflow as tf
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
-                     "lmbd": [(lambda x: x >= 0, "'lmbd' must be non-negative")],}
+                     "lmbd": [(lambda x: x >= 0, "'lmbd' must be non-negative")], }
 
 init_model_verification = {"lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0")]}
 
-fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
-
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, init_model_verification, fit_verification)
 
 
 class GraphFactorization(Model):
@@ -25,6 +26,7 @@ class GraphFactorization(Model):
     2013'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """

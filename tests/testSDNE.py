@@ -13,3 +13,11 @@ def test_sdne_result_has_expected_shape():
         Z = SDNE.fast_embed(graph, d=d)
         n = len(graph.nodes)
         assert Z.shape == (n, d)
+
+def test_sdne_walk_parameter_verification():
+    graph = None
+    try:
+        m = SDNE(graph)
+        assert False
+    except Exception:
+        assert True

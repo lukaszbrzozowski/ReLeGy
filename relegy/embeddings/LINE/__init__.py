@@ -3,6 +3,8 @@ import networkx as nx
 from networkx import Graph
 from relegy.__base import Model
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"d": [(lambda d: d > 0, "d has to be greater than 0.")]}
 
 init_model_verification = {"batch_size": [(lambda x: x > 0, "batch_size must be greater than 0.")],
@@ -13,7 +15,7 @@ init_model_verification = {"batch_size": [(lambda x: x > 0, "batch_size must be 
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0,")]}
 
-fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, init_model_verification, fit_verification)
 
 
 class LINE(Model):
@@ -24,6 +26,7 @@ class LINE(Model):
     WWW, 2015.'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """

@@ -7,11 +7,14 @@ import tensorflow as tf
 import scipy.sparse as sps
 from tensorflow.keras.layers import Layer
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_model_verification = {"lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0")]}
 
-fast_embed_verification = Model.dict_union(init_model_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_model_verification, fit_verification)
+
 
 class GCN(Model):
     """
@@ -20,6 +23,7 @@ class GCN(Model):
     'T.N. Kipf and M. Welling. Semi-supervised classification with graph convolutional networks. In ICLR, 2016.'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph
                  ):
@@ -108,8 +112,8 @@ class GCN(Model):
     @Model._init_model_in_init_model_fit
     @Model._verify_parameters(rules_dict=init_model_verification)
     def initialize_model(self,
-                         n_hid = None,
-                         activations = None,
+                         n_hid=None,
+                         activations=None,
                          lr: float = 0.01):
         """
         GCN - initialize_model (step III) \n
@@ -167,7 +171,7 @@ class GCN(Model):
             g = self.__get_gradients(self.__model)
             self.__optimizer.apply_gradients(zip(g, self.__model.variables))
             if verbose:
-                print("Epoch " + str(i+1) + ": " + str(self.__get_loss(self.__model)))
+                print("Epoch " + str(i + 1) + ": " + str(self.__get_loss(self.__model)))
                 accuracy.reset_states()
                 accuracy.update_state(self.__Y, np.argmax(self.__model(self.__X), axis=1))
                 print("Accuracy: " + str(accuracy.result().numpy()))
@@ -187,8 +191,8 @@ class GCN(Model):
                    Y: ndarray,
                    Y_mask: ndarray = None,
                    X: ndarray = None,
-                   n_hid = None,
-                   activations = None,
+                   n_hid=None,
+                   activations=None,
                    lr: float = 0.01,
                    num_iter: int = 300,
                    fit_verbose=True):
@@ -213,5 +217,3 @@ class GCN(Model):
         gcn.initialize_model(n_hid, activations, lr)
         gcn.fit(num_iter, verbose=fit_verbose)
         return gcn.embed()
-
-

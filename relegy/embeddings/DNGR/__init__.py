@@ -6,6 +6,8 @@ from numpy import ndarray
 from relegy.__helpers.sdae import SDAE
 from relegy.__base import Model
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"T": [(lambda x: x > 0, "'T' must be greater than 0.")],
                      "alpha": [(lambda x: 0 <= x <= 1, "'alpha' must be in range [0, 1].")]}
 
@@ -18,7 +20,7 @@ init_model_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0."
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "num_iter must be greater than 0")]}
 
-fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, init_model_verification, fit_verification)
 
 
 class DNGR(Model):
@@ -27,6 +29,8 @@ class DNGR(Model):
     The details may be found in: \n
     'S. Cao, W. Lu, and Q. Xu. Deep neural networks for learning graph representations. In AAAI, 2016.'
     """
+
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """

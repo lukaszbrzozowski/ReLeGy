@@ -14,6 +14,13 @@ def test_harp_result_has_expected_shape():
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
+def test_harp_walk_parameter_verification():
+    graph = None
+    try:
+        m = HARP(graph)
+        assert False
+    except Exception:
+        assert True
 # def test_harp_consistent_embedding_with_identical_random_state():
 #     for graph in examplesDict.values():
 #         model1 = HARP(graph, random_state=2137)

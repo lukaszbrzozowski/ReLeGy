@@ -10,6 +10,9 @@ from relegy.__base import Model
 
 SparseMatrix = namedtuple("SparseMatrix", "indices values dense_shape")
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
+
 # class for the core of the architecture
 class GNN(Model):
     """
@@ -19,6 +22,7 @@ class GNN(Model):
 Neural Networks, vol. 20, no. 1, pp. 61-80.'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self, graph: nx.Graph):
         """
         GNN -- constructor (step I)

@@ -9,6 +9,8 @@ from relegy.embeddings.DeepWalk import DeepWalk
 from relegy.embeddings.Node2Vec import Node2Vec
 from relegy.__base import Model
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"threshold": [(lambda x: True if x is None else x > 0, "'threshold' must be greater than 0.")],
                      "L": [(lambda x: True if x is None else x > 0, "'L' must be non-negative")],
                      "T": [(lambda x: x > 0, "'T' must be greater than 0.")],
@@ -25,7 +27,7 @@ init_model_verification = {"d": [(lambda x: x > 0, "d must be greater than 0.")]
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0")]}
 
-fast_embed_verification = Model.dict_union(init_verification, init_model_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, init_model_verification, fit_verification)
 
 
 
@@ -37,6 +39,8 @@ class HARP(Model):
     'H. Chen, B. Perozzi, Y. Hu, and S. Skiena. Harp: Hierarchical representation learning for networks. arXiv preprint
 arXiv:1706.07845, 2017.'
     """
+
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """

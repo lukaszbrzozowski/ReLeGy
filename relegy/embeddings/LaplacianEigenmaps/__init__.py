@@ -8,12 +8,14 @@ from networkx import Graph
 from numpy import ndarray
 from scipy.optimize import minimize
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")]}
 
 fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater than 0.")],
                     "ftol": [(lambda x: x > 0, "'ftol' must be greater than 0.")]}
 
-fast_embed_verification = Model.dict_union(init_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, fit_verification)
 
 
 
@@ -24,6 +26,7 @@ class LaplacianEigenmaps(Model):
     M. Belkin and P. Niyogi. Laplacian eigenmaps and spectral techniques for embedding and clustering. In NIPS, 2002.
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph
                  ):

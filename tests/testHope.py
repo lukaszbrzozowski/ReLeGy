@@ -13,3 +13,11 @@ def test_hope_result_has_expected_shape():
         Z = HOPE.fast_embed(graph, d=d)
         n = len(graph.nodes)
         assert Z.shape == (n, 2*d)
+
+def test_hope_walk_parameter_verification():
+    graph = None
+    try:
+        m = HOPE(graph)
+        assert False
+    except Exception:
+        assert True

@@ -5,13 +5,15 @@ import numpy as np
 from numpy import ndarray
 import tensorflow as tf
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 init_verification = {"J": [(lambda x: x >= 1, "'J' must be at least 1.")],
                      "eta": [(lambda x: 0 < x <= 1, "'eta' must be in range (0, 1]")],
                      "gamma": [(lambda x: 0 < x <= 1, "'gamma' must be in range (0, 1]")]}
 
 fit_verification = {"d": [(lambda x: x > 0, "d must be greater than 0.")]}
 
-fast_embed_verification = Model.dict_union(init_verification, fit_verification)
+fast_embed_verification = Model.dict_union(construct_verification, init_verification, fit_verification)
 
 
 
@@ -23,6 +25,7 @@ class GraphWave(Model):
 preprint arXiv:1710.10321, 2017.'
     """
 
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph):
         """

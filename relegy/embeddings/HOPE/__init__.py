@@ -5,6 +5,8 @@ import numpy as np
 
 import tensorflow as tf
 
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+
 universal_verification = {"d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
 
 
@@ -15,6 +17,8 @@ class HOPE(Model):
     The details may be found in: \n
     'M. Ou, P. Cui, J. Pei, Z. Zhang, and W. Zhu. Asymmetric transitivity preserving graph embedding. In KDD, 2016.'
     """
+
+    @Model._verify_parameters(rules_dict=construct_verification)
     def __init__(self,
                  graph: Graph,
                  keep_full_SVD: bool = True):
