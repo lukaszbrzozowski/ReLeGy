@@ -1,5 +1,5 @@
 info_dict = {
-    "DeepWalk": """lala""",
+    "DeepWalk": """description""",
     "DNGR": """description""",
     "GCN": """description""",
     "GNN": """description""",

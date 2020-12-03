@@ -18,7 +18,6 @@ fit_verification = {"num_iter": [(lambda x: x > 0, "'num_iter' must be greater t
 fast_embed_verification = Model.dict_union(construct_verification, init_verification, fit_verification)
 
 
-
 class LaplacianEigenmaps(Model):
     """
     The Laplacian Eigenmaps method implementation. \n
