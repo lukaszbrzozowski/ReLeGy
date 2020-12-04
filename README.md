@@ -14,3 +14,11 @@ The ReLeGy package offers multiple methods of embedding graph vertices into vect
 * GraphWave
 * GNN
 * GCN
+
+## Installation
+
+Installing relegy is simple, use 
+
+```
+pip3 install git+https://github.com/lukaszbrzozowski/ReLeGy.git
+```
