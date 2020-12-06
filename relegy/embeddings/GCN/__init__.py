@@ -184,7 +184,7 @@ class GCN(Model):
         Returns the embedding matrix.
         @return: The embedding matrix with shape N x d, where d is the number of unique labels.
         """
-        return self.__model(self.__X)
+        return self.__model(self.__X).numpy()
 
     @staticmethod
     @Model._verify_parameters(rules_dict=fast_embed_verification)
