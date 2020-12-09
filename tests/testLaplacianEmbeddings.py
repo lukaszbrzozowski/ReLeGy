@@ -14,7 +14,7 @@ def test_laplacian_eigenmaps_result_has_expected_shape():
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
-def test_laplacian_eigenmaps_walk_parameter_verification():
+def test_laplacian_eigenmaps_parameter_verification():
     graph = None
     try:
         m = LaplacianEigenmaps(graph)

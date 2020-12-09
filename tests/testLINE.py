@@ -4,17 +4,17 @@ import numpy as np
 
 def test_line_fast_embeds_without_error():
     for graph in examplesDict.values():
-        Z = LINE.fast_embed(graph)
+        Z = LINE.fast_embed(graph, fit_verbose=False)
         assert isinstance(Z, np.ndarray)
 
 def test_line_result_has_expected_shape():
     for graph in examplesDict.values():
         d = 4
-        Z = LINE.fast_embed(graph, d=d)
+        Z = LINE.fast_embed(graph, d=d, fit_verbose=False)
         n = len(graph.nodes)
         assert Z.shape == (n, 2*d)
 
-def test_line_walk_parameter_verification():
+def test_line_parameter_verification():
     graph = None
     try:
         m = LINE(graph)

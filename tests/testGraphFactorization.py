@@ -4,17 +4,17 @@ import numpy as np
 
 def test_graph_factorization_fast_embeds_without_error():
     for graph in examplesDict.values():
-        Z = GraphFactorization.fast_embed(graph)
+        Z = GraphFactorization.fast_embed(graph, fit_verbose=False)
         assert isinstance(Z, np.ndarray)
 
 def test_graph_factorization_result_has_expected_shape():
     for graph in examplesDict.values():
         d = 4
-        Z = GraphFactorization.fast_embed(graph, d=d)
+        Z = GraphFactorization.fast_embed(graph, d=d, fit_verbose=False)
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
-def test_graph_factorization_walk_parameter_verification():
+def test_graph_factorization_parameter_verification():
     graph = None
     try:
         m = GraphFactorization(graph)

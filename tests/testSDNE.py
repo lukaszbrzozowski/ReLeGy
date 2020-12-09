@@ -14,7 +14,7 @@ def test_sdne_result_has_expected_shape():
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
-def test_sdne_walk_parameter_verification():
+def test_sdne_parameter_verification():
     graph = None
     try:
         m = SDNE(graph)

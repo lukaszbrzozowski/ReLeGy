@@ -4,17 +4,17 @@ import numpy as np
 
 def test_dngr_fast_embeds_without_error():
     for graph in examplesDict.values():
-        Z = DNGR.fast_embed(graph)
+        Z = DNGR.fast_embed(graph, fit_verbose=False)
         assert isinstance(Z, np.ndarray)
 
 def test_dngr_result_has_expected_shape():
     for graph in examplesDict.values():
         d = 4
-        Z = DNGR.fast_embed(graph, d=d)
+        Z = DNGR.fast_embed(graph, d=d, fit_verbose=False)
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
-def test_dngr_walk_parameter_verification():
+def test_dngr_parameter_verification():
     graph = None
     try:
         m = DNGR(graph)

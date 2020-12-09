@@ -14,7 +14,7 @@ def test_node2vec_result_has_expected_shape():
         n = len(graph.nodes)
         assert Z.shape == (n, d)
 
-def test_node2vec_walk_parameter_verification():
+def test_node2vec_parameter_verification():
     graph = None
     try:
         m = Node2Vec(graph)
