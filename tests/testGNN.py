@@ -25,7 +25,7 @@ def test_gnn_fast_embeds_without_error():
 def test_gnn_result_has_expected_shape():
     graph, labels = rlg.get_karate_graph()
     Y = np.array([[i for i, label in labels], factorize([label for i, label in labels])]).T
-    d = 4
+    d = 5
     Z = GNN.fast_embed(graph, idx_labels=Y, embed_dim=d)
     n = len(graph.nodes)
     print(Z.shape)

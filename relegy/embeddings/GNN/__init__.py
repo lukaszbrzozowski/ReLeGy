@@ -104,8 +104,8 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         self.output_dim = self.labels.shape[1]
         self.state_dim = embed_dim
         self.state_input = self.input_dim - 2 + self.state_dim
-        self.state_l1 = 20
-        self.output_l1 = 20
+        self.state_l1 = 2*self.state_dim
+        self.output_l1 = 2*self.state_dim
         self.modelSt = tf.keras.Sequential([
             tf.keras.layers.InputLayer(input_shape=self.state_input),
             tf.keras.layers.Dense(self.state_l1, activation=tf.nn.tanh),
