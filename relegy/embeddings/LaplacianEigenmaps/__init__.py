@@ -22,7 +22,7 @@ class LaplacianEigenmaps(Model):
     """
     The Laplacian Eigenmaps method implementation. \n
     The details may be found in: \n
-    M. Belkin and P. Niyogi. Laplacian eigenmaps and spectral techniques for embedding and clustering. In NIPS, 2002.
+    'M. Belkin and P. Niyogi. Laplacian eigenmaps and spectral techniques for embedding and clustering. In NIPS, 2002.'
     """
 
     @Model._verify_parameters(rules_dict=construct_verification)
