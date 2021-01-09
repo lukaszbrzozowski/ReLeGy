@@ -71,7 +71,7 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
     @Model._init_in_init_model_fit
     def initialize(self, idx_labels):
         """
-        GraRep - Initialize (step II) \n
+        GNN - Initialize (step II) \n
         Generates internal graph representation and transforms labels to suitable format.
 
         @param idx_labels: ndarray nx2 of pairs (node_id, label)
