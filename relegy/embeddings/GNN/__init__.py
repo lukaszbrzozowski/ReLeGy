@@ -71,7 +71,7 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
     @Model._init_in_init_model_fit
     def initialize(self, idx_labels):
         """
-        GNN - Initialize (step II) \n
+        GraRep - Initialize (step II) \n
         Generates internal graph representation and transforms labels to suitable format.
 
         @param idx_labels: ndarray nx2 of pairs (node_id, label)
@@ -84,14 +84,14 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         self.labels = labels
 
     @Model._init_model_in_init_model_fit
-    def initialize_model(self, d=4,
+    def initialize_model(self, embed_dim=4,
                          max_it=50, optimizer=tf.keras.optimizers.Adam, learning_rate=0.01, threshold=0.01,
                          mask_flag=True, mask_test=None, mask_train=None):
         """
         GNN - initialize_model (step III) \n
         Initializes the Graph Neural Network model.
 
-        @param d: dimension for the embedding.
+        @param embed_dim: dimension for the embedding.
         @param max_it: maximum number of iteration of the state convergence procedure.
         @param optimizer: optimizer instance.
         @param learning_rate: learning rate value.
@@ -102,7 +102,7 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         """
         self.input_dim = self.inp.shape[1]
         self.output_dim = self.labels.shape[1]
-        self.state_dim = d
+        self.state_dim = embed_dim
         self.state_input = self.input_dim - 2 + self.state_dim
         self.state_l1 = 2*self.state_dim
         self.output_l1 = 2*self.state_dim
@@ -183,12 +183,12 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         return result.numpy()
 
     @staticmethod
-    def fast_embed(graph: Graph, idx_labels, d=4,
+    def fast_embed(graph: Graph, idx_labels, embed_dim=4,
                    max_it=50, optimizer=tf.keras.optimizers.Adam, learning_rate=0.01, threshold=0.01,
                    mask_flag=False, mask_train=None, mask_test=None, num_epoch=100):
         gnn = GNN(graph)
         gnn.initialize(idx_labels)
-        gnn.initialize_model(d, max_it, optimizer, learning_rate, threshold,
+        gnn.initialize_model(embed_dim, max_it, optimizer, learning_rate, threshold,
                              mask_flag, mask_train, mask_test)
         gnn.fit(num_epoch)
         return gnn.embed()

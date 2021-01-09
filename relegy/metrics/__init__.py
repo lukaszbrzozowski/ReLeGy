@@ -30,7 +30,7 @@ def precision_at_k(similarity_matrix, obtained_matrix):
     Precision at k for each k in range 0 to the number of non-zero elements of obtained_matrix
     :param similarity_matrix: The approximated matrix, usually the adjacency matrix of a graph
     :param obtained_matrix: The matrix obtained with a representation method
-    :return: The array of values of precision at k
+    :return: The value of NRMSE
     """
     flat_sim = similarity_matrix.flatten()
     flat_obs = obtained_matrix.flatten()
@@ -52,7 +52,7 @@ def average_precision(similarity_vector, obtained_vector):
     Average precision of prediction
     :param similarity_vector: The approximated vector, usually a column from the adjacency matrix of a graph
     :param obtained_vector: The vector obtained with a representation method
-    :return: The value of AP
+    :return: The value of NRMSE
     """
     prec_k = precision_at_k(similarity_vector, obtained_vector)
     flat_sim_positive = similarity_vector > 0
@@ -65,7 +65,7 @@ def mean_average_precision(similarity_matrix, obtained_matrix):
     Mean average precision of prediction. Mean precision is calculated for each vertex of a graph.
     :param similarity_matrix: The approximated matrix, usually the adjacency matrix of a graph
     :param obtained_matrix: The matrix obtained with a representation method
-    :return: The value of MAP
+    :return: The value of NRMSE
     """
     return np.mean([average_precision(similarity_matrix[i, :], obtained_matrix[i, :])
                     for i in range(similarity_matrix.shape[0])])
@@ -76,7 +76,7 @@ def all_average_precision(similarity_matrix, obtained_matrix):
     A vector of average precision values for each vertex.
     :param similarity_matrix: The approximated matrix, usually the adjacency matrix of a graph
     :param obtained_matrix: The matrix obtained with a representation method
-    :return: The array of values of AP
+    :return: The value of NRMSE
     """
     return np.array([average_precision(similarity_matrix[i, :], obtained_matrix[i, :])
                      for i in range(similarity_matrix.shape[0])])
