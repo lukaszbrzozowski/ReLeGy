@@ -2,7 +2,7 @@
 @author madhumita
 @author lukaszbrzozowski
 The source code: https://github.com/MadhumitaSushil/SDAE
-It was updated and slightly modified to allow for fine-tuning of DNGR
+It was updated and slightly modified to allow for fine-tuning of DNGR - lukaszbrzozowski
 """
 
 import os
