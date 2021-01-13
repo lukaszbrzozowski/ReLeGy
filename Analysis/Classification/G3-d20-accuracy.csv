@@ -1,0 +1,15 @@
+Method,Accuracy
+DNGR,1.0
+DeepWalk,1.0
+GNN,1.0
+GraRep,1.0
+GraphFactorization,1.0
+GraphWave,0.3330000042915344
+HARP_Deepwalk,1.0
+HARP_Node2Vec,1.0
+HOPE,0.3330000042915344
+LINE,0.4129999876022339
+LaplacianEigenmaps,0.3330000042915344
+Node2Vec,1.0
+SDNE,0.3330000042915344
+Struc2Vec,1.0
