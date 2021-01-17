@@ -5,7 +5,7 @@ from numpy import ndarray
 from networkx import Graph
 import tensorflow as tf
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 init_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")],
                      "lmbd": [(lambda x: x >= 0, "'lmbd' must be non-negative")], }

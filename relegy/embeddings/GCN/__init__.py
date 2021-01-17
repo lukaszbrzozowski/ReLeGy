@@ -7,7 +7,7 @@ import tensorflow as tf
 import scipy.sparse as sps
 from tensorflow.keras.layers import Layer
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 init_model_verification = {"lr": [(lambda x: x > 0, "'lr' must be greater than 0.")]}
 

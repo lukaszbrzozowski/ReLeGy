@@ -7,7 +7,7 @@ from networkx import Graph
 
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 
 # class for the core of the architecture

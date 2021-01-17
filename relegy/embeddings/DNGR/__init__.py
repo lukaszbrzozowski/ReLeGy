@@ -6,7 +6,7 @@ from numpy import ndarray
 from relegy.__helpers.sdae import SDAE
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 init_verification = {"T": [(lambda x: x > 0, "'T' must be greater than 0.")],
                      "alpha": [(lambda x: 0 <= x <= 1, "'alpha' must be in range [0, 1].")]}

@@ -6,7 +6,7 @@ from numpy import ndarray
 
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 init_verification = {"T" : [(lambda x: x > 0, "T must be greater than 0.")],
                      "gamma" : [(lambda x: x > 0, "gamma must be greater than 0.")],

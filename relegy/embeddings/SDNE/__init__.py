@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow_addons.losses import metric_learning
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 init_verification = {"alpha": [(lambda d: d >= 0, "'alpha' must be non-negative.")],
                      "beta": [(lambda d: d >= 0, "'beta' must be non-negative.")],

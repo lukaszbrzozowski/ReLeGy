@@ -5,7 +5,7 @@ import numpy as np
 
 import tensorflow as tf
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 universal_verification = {"d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
 

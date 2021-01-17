@@ -4,7 +4,7 @@ import networkx as nx
 from networkx import Graph
 import tensorflow as tf
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
 
 init_verification = {"lmbd": [(lambda x: x > 0, "'lmbd' must be greater than 0.")]}
 
