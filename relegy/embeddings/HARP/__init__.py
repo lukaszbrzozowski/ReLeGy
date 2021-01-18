@@ -9,7 +9,7 @@ from relegy.embeddings.DeepWalk import DeepWalk
 from relegy.embeddings.Node2Vec import Node2Vec
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx Graph")]}
 
 init_verification = {"threshold": [(lambda x: True if x is None else x > 0, "'threshold' must be greater than 0.")],
                      "L": [(lambda x: True if x is None else x > 0, "'L' must be non-negative")],

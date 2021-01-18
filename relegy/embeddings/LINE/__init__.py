@@ -1,10 +1,10 @@
 import numpy as np
 import networkx as nx
-from networkx import Graph
+from networkx import Graph, DiGraph
 from relegy.__base import Model
 import tensorflow as tf
 
-construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph or type(x) == DiGraph, "'graph' must be a networkx Graph or DiGraph")]}
 
 init_verification = {"d": [(lambda d: d > 0, "d has to be greater than 0.")]}
 
@@ -31,7 +31,7 @@ class LINE(Model):
         """
         LINE - constructor (step I)
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. May be weighted and/or directed.
         """
         super().__init__(graph.to_directed())
         self.__d = None

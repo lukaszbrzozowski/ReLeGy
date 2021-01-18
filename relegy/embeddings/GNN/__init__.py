@@ -1,13 +1,12 @@
 import tensorflow as tf
 import numpy as np
-import datetime as time
 import networkx as nx
 import scipy.sparse as sp
 from networkx import Graph
 
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: issubclass(type(x), Graph), "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx Graph")]}
 
 
 # class for the core of the architecture
@@ -25,19 +24,8 @@ Neural Networks, vol. 20, no. 1, pp. 61-80.'
         GNN -- constructor (step I)
 
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
-        create GNN instance. Feed this parameters:
-        :net:  Net instance - it contains state network, output network, initialized weights, loss function and metric;
-        :input_dim: dimension of the input
-        :output_dim: dimension of the output
-        :state_dim: dimension for the state
-        :max_it:  maximum number of iteration of the state convergence procedure
-        :optimizer:  optimizer instance
-        :learning_rate: learning rate value
-        :threshold:  value to establish the state convergence
-        :graph_based: flag to denote a graph based problem
-        :param: name of the experiment
-        :config: ConfigProto protocol buffer object, to set configuration options for a session
+        the number of vertices. May be weighted, but cannot be directed.
+
         """
         super().__init__(graph)
         self.inp = None
