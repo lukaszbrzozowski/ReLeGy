@@ -3,6 +3,7 @@
 @author lukaszbrzozowski
 The source code: https://github.com/MadhumitaSushil/SDAE
 It was updated and slightly modified to allow for fine-tuning of DNGR
+Modified 18.01.2021
 """
 
 import os
