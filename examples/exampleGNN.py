@@ -1,6 +1,5 @@
-from relegy.embeddings.GNN import GNN
+import relegy.embeddings as rle
 import relegy.__helpers.gnn_utils as utils
-import tensorflow as tf
 import networkx as nx
 
 
@@ -23,11 +22,17 @@ state_dim = 3
 max_it = 50
 num_epoch = 1000
 
-# initialize GNN
-param = "st_d" + str(state_dim) + "_th" + str(threshold) + "_lr" + str(learning_rate)
-print(param)
+gnn = rle.GNN(graph=graph)
+gnn.initialize(labels)
+gnn.initialize_model(embed_dim=state_dim, num_epoch=num_epoch, threshold=threshold, learning_rate=learning_rate, max_it=max_it, mask_flag=False)
+gnn.fit()
+Z = gnn.embed
+print(Z.shape)
+print(Z)
 
-result = GNN.fast_embed(graph, labels,
+# initialize GNN
+
+Z = rle.GNN.fast_embed(graph, labels,
                         embed_dim=state_dim,
                         num_epoch=num_epoch,
                         threshold=threshold,
@@ -35,5 +40,5 @@ result = GNN.fast_embed(graph, labels,
                         max_it=max_it,
                         mask_flag=False)
 
-print(result.shape)
-print(result)
+print(Z.shape)
+print(Z)

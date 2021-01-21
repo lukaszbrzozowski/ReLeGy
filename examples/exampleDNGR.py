@@ -1,6 +1,16 @@
-import relegy.embeddings as emb
-import networkx as nx
-G = nx.random_graphs.erdos_renyi_graph(100, 0.3)
+import relegy.embeddings as rle
+import relegy.graphs as rlg
 
-Z = emb.DNGR.fast_embed(G, d=5, n_layers=-2)
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
+
+dngr = rle.DNGR(G)
+dngr.initialize()
+dngr.initialize_model(d=5)
+dngr.fit()
+Z = dngr.embed()
+print(Z.shape)
+print(Z)
+
+Z = rle.DNGR.fast_embed(G)
+print(Z.shape)
 print(Z)

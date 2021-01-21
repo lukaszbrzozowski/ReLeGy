@@ -1,15 +1,15 @@
-import networkx as nx
-import relegy.embeddings as emb
+import relegy.embeddings as rle
+import relegy.graphs as rlg
 
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 
-G = nx.erdos_renyi_graph(200, 0.1)
-
-line = emb.LINE(G)
-line.initialize(d=2)
-line.initialize_model(lmbd1=2)
+line = rle.LINE(G)
+line.initialize()
 line.fit()
 Z = line.embed()
-
-Z = emb.LINE.fast_embed(G, d=-1)
-
 print(Z.shape)
+print(Z)
+
+Z = rle.LINE.fast_embed(G)
+print(Z.shape)
+print(Z)

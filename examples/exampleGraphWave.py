@@ -1,37 +1,14 @@
-import relegy.embeddings as emb
-import numpy as np
+import relegy.embeddings as rle
+import relegy.graphs as rlg
 import matplotlib.pyplot as plt
-import networkx as nx
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
-bg = nx.barbell_graph(20, 4)
-color_map = []
-plt.show()
-for node in bg:
-    if node < 19 or node > 24:
-        color_map.append("blue")
-    elif node == 19 or node == 24:
-        color_map.append("orange")
-    elif node == 20 or node == 23:
-        color_map.append("green")
-    else:
-        color_map.append("yellow")
-nx.draw(bg, with_labels=True, node_color=color_map)
-plt.show()
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 
-nx.draw(bg, with_labels=True, node_color=color_map)
-plt.show()
-gw = emb.GraphWave(bg)
-gw.initialize(J=3)
-gw.fit(interval_start=0,
-       interval_stop=2*np.pi,
-       d=20)
-
+gw = rle.GraphWave(G)
+gw.initialize()
+gw.fit()
 Z = gw.embed()
 print(Z.shape)
-Z = StandardScaler().fit_transform(Z)
-pca = PCA(n_components=2, svd_solver="full")
-pc = pca.fit_transform(Z)
-plt.scatter(pc[:, 0], pc[:, 1], c=color_map)
-plt.show()
+Z = rle.GraphWave.fast_embed(G)
+print(Z.shape)
+print(Z)

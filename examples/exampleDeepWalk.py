@@ -1,15 +1,17 @@
-import relegy.embeddings as emb
-import networkx as nx
-import matplotlib.pyplot as plt
-G = nx.random_graphs.erdos_renyi_graph(200, 0.1)
+import relegy.embeddings as rle
+import relegy.graphs as rlg
 
-dw = emb.DeepWalk(G)
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
+
+dw = rle.DeepWalk(G)
 dw.initialize(T=40,
               gamma=1)
 dw.initialize_model(d=5)
 dw.fit()
 Z = dw.embed()
 print(Z.shape)
-Z = emb.DeepWalk.fast_embed(G, negative=-1)
-plt.scatter(Z[:, 0], Z[:, 1])
-plt.show()
+print(Z)
+
+Z = rle.DeepWalk.fast_embed(G, negative=-1)
+print(Z.shape)
+print(Z)

@@ -1,13 +1,15 @@
-import relegy.embeddings as emb
-import networkx as nx
+import relegy.embeddings as rle
+import relegy.graphs as rlg
 
-G = nx.erdos_renyi_graph(200, 0.1)
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 
-hope = emb.HOPE(G)
-hope.initialize("Katz")
+hope = rle.HOPE(G)
+hope.initialize()
 hope.fit()
-Z = hope.embed(d=20, concatenated=True)
+Z = hope.embed()
 print(Z.shape)
+print(Z)
 
-Z = emb.HOPE.fast_embed(G, d=3, proximity="CN", concatenated=False)
+Z = rle.HOPE.fast_embed(G)
 print(Z.shape)
+print(Z)

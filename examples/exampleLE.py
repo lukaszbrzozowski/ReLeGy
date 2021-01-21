@@ -1,19 +1,15 @@
-import relegy.embeddings as emb
-import networkx as nx
-from time import time
+import relegy.embeddings as rle
+import relegy.graphs as rlg
 
-G = nx.erdos_renyi_graph(200, 0.1)
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 
-start_time = time()
-Z = emb.LaplacianEigenmaps.fast_embed(G)
-finish_time = time()
-print(finish_time-start_time)
+le = rle.LaplacianEigenmaps(G)
+le.initialize()
+le.fit()
+Z = le.embed()
+print(Z.shape)
+print(Z)
 
-
-start_time = time()
-LE = emb.LaplacianEigenmaps(G)
-LE.initialize(d=2)
-#LE.fit(num_iter=200)
-Z = LE.embed()
-finish_time = time()
-print(finish_time-start_time)
+Z = rle.LaplacianEigenmaps.fast_embed(G)
+print(Z.shape)
+print(Z)
