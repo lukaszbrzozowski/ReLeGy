@@ -1,19 +1,23 @@
 import relegy.embeddings as rle
-import relegy.__helpers.gnn_utils as utils
-import networkx as nx
+import relegy.graphs as rlg
+import numpy as np
+
+def factorize(l):
+    i = 0
+    factorize_dict = {}
+    result = []
+    for e in l:
+        if e in factorize_dict:
+            result.append(factorize_dict[e])
+        else:
+            factorize_dict[e] = i
+            result.append(i)
+            i += 1
+    return result
 
 
-##### GPU & stuff config
-import os
-
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-
-############# training set ################
-# Provide your own functions to generate input data
-
-E, N, labels, mask_train, mask_test = utils.load_karate()
-graph = nx.from_edgelist(list(E[:,:2]))
-print(labels)
+graph, labels = rlg.get_karate_graph()
+Y = np.array([[i for i, label in labels], factorize([label for i, label in labels])]).T
 
 # set input and output dim, the maximum number of iterations, the number of epochs and the optimizer
 threshold = 0.001
