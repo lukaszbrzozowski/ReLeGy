@@ -9,13 +9,15 @@ G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 A = nx.to_numpy_array(G)
 print("Graph generated")
 
-Z_gf = rle.GraphFactorization.fast_embed(G)
+Z_gf = rle.GraphFactorization.fast_embed(G, fit_verbose=False)
 X_gf = Z_gf @ Z_gf.T
 
 print("GF trained")
 
-X_hp = rle.HOPE.fast_embed(G, concatenated=False)
-
+Z_hp = rle.HOPE.fast_embed(G)
+Us = Z_hp[:, :2]
+Ut = Z_hp[:, 2:]
+X_hp = Us @ Ut.T
 print("HP trained")
 
 print("Evaluating GF")
