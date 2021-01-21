@@ -2,6 +2,7 @@ import relegy.embeddings as rle
 import relegy.graphs as rlg
 import numpy as np
 
+
 def factorize(l):
     i = 0
     factorize_dict = {}
@@ -28,21 +29,22 @@ num_epoch = 1000
 
 gnn = rle.GNN(graph=graph)
 gnn.initialize(Y)
-gnn.initialize_model(embed_dim=state_dim, num_epoch=num_epoch, threshold=threshold, learning_rate=learning_rate, max_it=max_it, mask_flag=False)
-gnn.fit()
+gnn.initialize_model(embed_dim=state_dim, threshold=threshold, learning_rate=learning_rate, max_it=max_it,
+                     mask_flag=False)
+gnn.fit(num_epoch=num_epoch)
 Z = gnn.embed()
 print(Z.shape)
 print(Z)
 
 # initialize GNN
 
-Z = rle.GNN.fast_embed(graph, labels,
-                        embed_dim=state_dim,
-                        num_epoch=num_epoch,
-                        threshold=threshold,
-                        learning_rate=learning_rate,
-                        max_it=max_it,
-                        mask_flag=False)
+Z = rle.GNN.fast_embed(graph, Y,
+                       embed_dim=state_dim,
+                       num_epoch=num_epoch,
+                       threshold=threshold,
+                       learning_rate=learning_rate,
+                       max_it=max_it,
+                       mask_flag=False)
 
 print(Z.shape)
 print(Z)
