@@ -1,9 +1,6 @@
 import relegy.embeddings as rle
 import relegy.graphs as rlg
-import networkx as nx
 import numpy as np
-import matplotlib.pyplot as plt
-import relegy.__helpers.gnn_utils as utils
 
 
 G, labels = rlg.get_karate_graph()
@@ -13,7 +10,7 @@ gcn = rle.GCN(G)
 gcn.initialize(Y=labels)
 gcn.initialize_model()
 gcn.fit()
-Z = gcn.embed().numpy()
+Z = gcn.embed()
 print(Z.shape)
 print(Z)
 

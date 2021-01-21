@@ -1,7 +1,7 @@
 import relegy.embeddings as rle
 import relegy.graphs as rlg
 
-G = rlg.geznerate_graph("erdos_renyi", n=200, p=0.1)
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 
 harp = rle.HARP(G)
 harp.initialize()

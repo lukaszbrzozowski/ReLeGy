@@ -174,7 +174,7 @@ class HOPE(Model):
         if concatenated:
             return tf.concat([Us, Ut], 1).numpy()
         else:
-            return tf.matmul(tf.transpose(Us), Ut).numpy()
+            return tf.matmul(Us, tf.transpose(Ut)).numpy()
 
     @staticmethod
     @Model._verify_parameters(rules_dict=universal_verification)
