@@ -8,7 +8,7 @@ from six import iteritems
 
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph and (not nx.is_weighted(x)), "'graph' must be an unweighted networkx Graph")]}
 
 init_verification = {"T" : [(lambda x: x > 0, "'T' must be greater than 0.")],
                      "gamma" : [(lambda x: x > 0, "'gamma' must be greater than 0.")],
@@ -42,7 +42,7 @@ identity. In KDD, 2017.'
         Struc2Vec - constructor (step I)
 
         @param graph: Graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. Cannot be weighted nor directed.
         """
 
         super().__init__(graph)

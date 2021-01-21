@@ -1,12 +1,12 @@
 import numpy as np
-from networkx import Graph
+from networkx import Graph, DiGraph
 import networkx as nx
 from numpy import ndarray
 
 from relegy.__helpers.sdae import SDAE
 from relegy.__base import Model
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph or type(x) == DiGraph, "'graph' must be a networkx Graph or DiGraph")]}
 
 init_verification = {"T": [(lambda x: x > 0, "'T' must be greater than 0.")],
                      "alpha": [(lambda x: 0 <= x <= 1, "'alpha' must be in range [0, 1].")]}
@@ -37,7 +37,7 @@ class DNGR(Model):
         DNGR - constructor (step I)
 
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. May be weighted and/or directed.
         """
 
         super().__init__(graph)

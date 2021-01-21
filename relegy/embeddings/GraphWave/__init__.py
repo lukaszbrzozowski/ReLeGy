@@ -5,7 +5,7 @@ import numpy as np
 from numpy import ndarray
 import tensorflow as tf
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph and (not nx.is_weighted(x)), "'graph' must be an unweighted networkx Graph")]}
 
 init_verification = {"J": [(lambda x: x >= 1, "'J' must be at least 1.")],
                      "eta": [(lambda x: 0 < x <= 1, "'eta' must be in range (0, 1]")],
@@ -32,7 +32,7 @@ preprint arXiv:1710.10321, 2017.'
         GraphWave - constructor (step I)
 
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. Cannot be weighted nor directed.
         """
         super().__init__(graph)
         self.__J = None

@@ -1,11 +1,11 @@
 from relegy.__base import Model
 import networkx as nx
-from networkx import Graph
+from networkx import Graph, DiGraph
 import numpy as np
 
 import tensorflow as tf
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph or type(x) == DiGraph, "'graph' must be a networkx Graph or DiGraph")]}
 
 universal_verification = {"d": [(lambda x: True if x is None else x > 0, "'d' must be greater than 0.")]}
 
@@ -26,7 +26,7 @@ class HOPE(Model):
         HOPE - constructor (step I)
 
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. May be weighted and/or directed.
         @param keep_full_SVD: if True, the HOPE instance keeps full SVDs decomposition in memory. This allows for fast
          calculation of embedding after fitting for different values of 'd'. If False, 'd' must be provided during
          fitting and cannot be changed in the 'embed' method.

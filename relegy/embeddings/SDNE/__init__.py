@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow_addons.losses import metric_learning
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: (type(x) == Graph or type(x) == nx.DiGraph) and (not nx.is_weighted(x)), "'graph' must be an unweighted networkx Graph or DiGraph")]}
 
 init_verification = {"alpha": [(lambda d: d >= 0, "'alpha' must be non-negative.")],
                      "beta": [(lambda d: d >= 0, "'beta' must be non-negative.")],
@@ -34,7 +34,7 @@ class SDNE(Model):
         SDNE - constructor (step I)
 
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. May be directed, but cannot be weighted.
         """
         super().__init__(graph)
         self.__d = None

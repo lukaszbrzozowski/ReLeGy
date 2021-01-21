@@ -8,7 +8,7 @@ from networkx import Graph
 from numpy import ndarray
 from scipy.optimize import minimize
 
-construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx graph")]}
+construct_verification = {"graph": [(lambda x: type(x) == Graph, "'graph' must be a networkx Graph")]}
 
 init_verification = {"d": [(lambda x: x > 0, "'d' must be greater than 0.")]}
 
@@ -33,7 +33,7 @@ class LaplacianEigenmaps(Model):
         Laplacian Eigenmaps - constructor (step I).
 
         @param graph: The graph to be embedded. Nodes of the graph must be a sorted array from 0 to n-1, where n is
-        the number of vertices.
+        the number of vertices. May be weighted but cannot be directed.
 
         """
         super().__init__(graph)
