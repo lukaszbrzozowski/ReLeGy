@@ -37,8 +37,8 @@ def get_karate_graph():
 
 def generate_clusters_graph(n, k, out_density, in_density):
     """
-    Generates a random graph with k clusters which sum to n vertices. The clusters have average edge density equal to in_density
-    and the remaining edges between clusters have density equal to out_density.
+    Generates a random graph with k clusters which sum to n vertices. The clusters have average edge density equal to
+    in_density and the remaining edges between clusters have density equal to out_density.
     Returns the graph and labels corresponding to clusters
     @param n: Number of vertices
     @param k: Number of clusters
@@ -64,5 +64,5 @@ def generate_clusters_graph(n, k, out_density, in_density):
     arr = np.arange(len(G1.edges))
     new_edges_size = np.floor(out_density*len(arr))
     new_edges = np.random.choice(arr, size=new_edges_size.astype(int))
-    G.add_edges_from(np.array(G1.edges)[new_edges,:])
+    G.add_edges_from(np.array(G1.edges)[new_edges, :])
     return G, labels

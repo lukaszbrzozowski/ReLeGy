@@ -1,51 +1,38 @@
-from relegy.embeddings.node import graphfactorization, laplacianembeddings, hope
-import relegy.metrics as met
+import relegy.embeddings as rle
+import relegy.metrics as rlm
+import relegy.graphs as rlg
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
 
-G = nx.random_graphs.barabasi_albert_graph(1000, 200)
+G = rlg.generate_graph("erdos_renyi", n=200, p=0.1)
 A = nx.to_numpy_array(G)
 print("Graph generated")
 
-# le = laplacianembeddings.LaplacianEmbeddings(G, d=5)
-# Z_le = le.embed(maxiter=10)
-# X_le = Z_le @ Z_le.T
-# print("LE trained")
-
-gf = graphfactorization.GraphFactorization(G, d=20)
-Z_gf = gf.embed()
+Z_gf = rle.GraphFactorization.fast_embed(G)
 X_gf = Z_gf @ Z_gf.T
 
 print("GF trained")
 
-hp = hope.HOPE(G, d=20)
-hp.embed()
-hp_dict = hp.getMatrixDict()
-Us, Ut = hp_dict["Us"], hp_dict["Ut"]
-
-X_hp = Us @ Ut.T
+X_hp = rle.HOPE.fast_embed(G, concatenated=False)
 
 print("HP trained")
 
-# print("Evaluating LE")
-# rmse_le = rmse(A, X_le)
-# nrmse_le = nrmse(A, X_le)
-# prec_k_le = precision_at_k(A, X_le)
-# map_le = mean_average_precision(A, X_le)
-
 print("Evaluating GF")
-rmse_gf = rmse(A, X_gf)
-nrmse_gf = nrmse(A, X_gf)
-prec_k_gf = precision_at_k(A, X_gf)
-map_gf = mean_average_precision(A, X_gf)
+rmse_gf = rlm.rmse(A, X_gf)
+nrmse_gf = rlm.nrmse(A, X_gf)
+prec_k_gf = rlm.precision_at_k(A, X_gf)
+map_gf = rlm.mean_average_precision(A, X_gf)
 
 print("Evaluating HOPE")
-rmse_hp = rmse(A, X_hp)
-nrmse_hp = nrmse(A, X_hp)
-prec_k_hp = precision_at_k(A, X_hp)
-map_hp = mean_average_precision(A, X_hp)
+rmse_hp = rlm.rmse(A, X_hp)
+nrmse_hp = rlm.nrmse(A, X_hp)
+prec_k_hp = rlm.precision_at_k(A, X_hp)
+print(A)
+print(X_hp)
+map_hp = rlm.mean_average_precision(A, X_hp)
 
-# plt.plot(np.arange(1, prec_k_le.shape[0]+1), prec_k_le, label="LE")
+
 plt.plot(np.arange(1, prec_k_gf.shape[0]+1), prec_k_gf, label="GF")
 plt.plot(np.arange(1, prec_k_hp.shape[0]+1), prec_k_hp, label="HOPE")
 plt.legend()
@@ -58,13 +45,10 @@ plt.bar(names, [rmse_hp, nrmse_hp, map_hp], label="HOPE")
 plt.legend()
 plt.show()
 
-# plt.hist(all_average_precision(A, X_le), label="LE")
-# plt.show()
-
-plt.hist(all_average_precision(A, X_gf), label="GF")
+plt.hist(rlm.all_average_precision(A, X_gf), label="GF")
 plt.show()
 
-plt.hist(all_average_precision(A, X_hp), label="HP")
+plt.hist(rlm.all_average_precision(A, X_hp), label="HP")
 plt.show()
 
 print(map_gf)

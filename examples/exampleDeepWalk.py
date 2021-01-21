@@ -12,6 +12,6 @@ Z = dw.embed()
 print(Z.shape)
 print(Z)
 
-Z = rle.DeepWalk.fast_embed(G, negative=-1)
+Z = rle.DeepWalk.fast_embed(G, T=40, gamma=1, d=5)
 print(Z.shape)
 print(Z)
