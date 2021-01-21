@@ -27,10 +27,10 @@ max_it = 50
 num_epoch = 1000
 
 gnn = rle.GNN(graph=graph)
-gnn.initialize(labels)
+gnn.initialize(Y)
 gnn.initialize_model(embed_dim=state_dim, num_epoch=num_epoch, threshold=threshold, learning_rate=learning_rate, max_it=max_it, mask_flag=False)
 gnn.fit()
-Z = gnn.embed
+Z = gnn.embed()
 print(Z.shape)
 print(Z)
 
