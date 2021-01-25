@@ -1,6 +1,6 @@
 # Copyright
 
-That software is currently unlicensed and, therefore, cannot be in any way. We will license it under the GPL 3.0 license as soon as we obtain the proper permissions of the Dean of Faculty of Mathematics and Information Science, WUT.
+<ins>That software is currently unlicensed and, therefore, cannot be in any way</ins>. We will license it under the GPL 3.0 license as soon as we obtain the proper permissions of the Dean of Faculty of Mathematics and Information Science, WUT.
 
 
 # ReLeGy - Representation Learning of Graphs in Python
