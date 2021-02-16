@@ -1,8 +1,3 @@
-# Copyright
-
-<ins>That software is currently unlicensed and, therefore, cannot be used in any way</ins>. We will license it under the GPL 3.0 license as soon as our thesis is reviewed and we obtain the proper permissions of the Dean of Faculty of Mathematics and Information Science, WUT.
-
-
 # ReLeGy - Representation Learning of Graphs in Python
 The ReLeGy package offers multiple methods of embedding graph vertices into vector spaces. Currently supported methods are:
 * Laplacian Eigenmaps [[1]](#1)
