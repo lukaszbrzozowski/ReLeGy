@@ -145,7 +145,8 @@ class DNGR(Model):
         colsum = np.sum(scaled_M, axis=0).reshape(1, N)
         rowsum = np.sum(scaled_M, axis=1).reshape(N, 1)
         allsum = np.sum(colsum)
-        PPMI = np.log((allsum * scaled_M) / np.dot(rowsum, colsum))
+        prod = np.dot(rowsum, colsum)
+        PPMI = np.log((allsum * scaled_M) / prod) if prod != 0 else 0
         PPMI[np.isinf(PPMI)] = 0
         PPMI[PPMI < 0] = 0
         return PPMI
