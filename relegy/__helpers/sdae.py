@@ -3,7 +3,7 @@
 @author lukaszbrzozowski
 The source code: https://github.com/MadhumitaSushil/SDAE
 It was updated and slightly modified to allow for fine-tuning of DNGR
-Modified 18.01.2021
+Modified 09.09.2021
 """
 
 import os
@@ -11,6 +11,7 @@ import os
 import numpy as np
 from tensorflow.keras.layers import Input, Dense, Dropout
 from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.callbacks import EarlyStopping
 
 from . import nn_utils
 
@@ -120,6 +121,8 @@ class SDAE(object):
                                       activation=self.dec_act[cur_layer], name='decoder' + str(cur_layer))
                 decoder = decoder_layer(encoder)
 
+                callback = EarlyStopping(monitor='loss', patience=3)
+
                 cur_model = Model(input_layer, decoder)
 
                 cur_model.compile(loss=self.loss_fn, optimizer=self.optimizer)
@@ -137,7 +140,8 @@ class SDAE(object):
             ),
                 epochs=self.nb_epoch,
                 steps_per_epoch=data_in.shape[0],
-                verbose=self.verbose
+                verbose=self.verbose,
+                callbacks=[callback]
             )
 
             print("Layer " + str(cur_layer) + " has been trained")

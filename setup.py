@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
     requirements = [req for req in requirements if req.split('~=')[0] not in ['gensim','six','fastdtw','tensorflow-probability','tensorflow-addons']]
 
 setuptools.setup(
-    name="relegy", # Replace with your own username
+    name="relegy",
     version="0.0.1",
     author="Łukasz Brzozowski, Kacper Siemaszko",
     author_email="author@example.com",
