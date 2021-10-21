@@ -1,4 +1,13 @@
 # ReLeGy - Representation Learning of Graphs in Python
+A vast number of various machine algorithms and approaches, regardless of the area of the problem, often make an underlying assumption that the analyzed data comes in an at least partially structured data frame. However, recently, we could observe a growing need to analyze data containing connections between the individual observations -- namely, graph data. Thus, many graph representation learning algorithms have been proposed over the years, aiming to represent the graph data in the standard data frame format.
+However, during our reearch of the topic, we found that most of the packages implementing these methods are targeted at people who already have substantial domain knowledge. We wanted to come up with a solution which is both easy to use and as flexible as possible. We focused on a number user needs:
+* to get the embedding of a graph with a single function call, without the need to either understand all of the parameters or spend hours reading package documentation,
+* to easily compare various methods having significantly different underlying implementationg with a simple and consistent interface,
+* to be able to change the parameter values without the need to start the whole embedding process from the beggining, which may be time-consuming for bigger graphs.
+
+To answer the above needs, we present the ReLeGy package.
+
+## Supported representation learning algorithms
 The ReLeGy package offers multiple methods of embedding graph vertices into vector spaces. Currently supported methods are:
 * Laplacian Eigenmaps [[1]](#1)
 * Graph Factorization [[2]](#2)
@@ -34,13 +43,13 @@ G = rlg.generate_clusters_graph(n=100, k=4, out_density=0.05, in_density=0.6)
 
 We generated a graph consisting of 4 clusters having 100 degrees in total. The cluster density is 0.6 and the between-cluster density is 0.05.
 
-We may now proceed to the embedding process. Each method offers two interfaces. Let's assume that we wish to embed the graph G with HOPE in 4-dimensional space. We may generate the embedding using a static function:
+We may now proceed to the embedding process. Each method offers two interfaces. Let's assume that we wish to embed the graph G with HOPE in a 4-dimensional space. We may generate the embedding using a static function:
 ```python
 import relegy.embeddings as rle
 
 Z = rle.HOPE.fast_embed(G, d=4) # other parameters may be passed here
 ```
-We may divide the process into stages:
+or we may divide the process into stages:
 ```python
 hope = rle.HOPE(G)
 
