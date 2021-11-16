@@ -1,9 +1,9 @@
 # ReLeGy - Representation Learning of Graphs in Python
 A vast number of various machine algorithms and approaches, regardless of the area of the problem, often make an underlying assumption that the analyzed data comes in an at least partially structured data frame. However, recently, we could observe a growing need to analyze data containing connections between the individual observations -- namely, graph data. Thus, many graph representation learning algorithms have been proposed over the years, aiming to represent the graph data in the standard data frame format.
-However, during our reearch of the topic, we found that most of the packages implementing these methods are targeted at people who already have substantial domain knowledge. We wanted to come up with a solution which is both easy to use and as flexible as possible. We focused on a number user needs:
+However, during our research of the topic, we found that most of the packages implementing these methods are targeted at people who already have substantial domain knowledge. We wanted to come up with a solution which is both easy to use and as flexible as possible. We focused on a number user needs:
 * to get the embedding of a graph with a single function call, without the need to either understand all of the parameters or spend hours reading package documentation,
 * to easily compare various methods having significantly different underlying implementationg with a simple and consistent interface,
-* to be able to change the parameter values without the need to start the whole embedding process from the beggining, which may be time-consuming for bigger graphs.
+* to be able to change the parameter values without the need to start the whole embedding process from the beginning, which may be time-consuming for bigger graphs.
 
 To answer the above needs, we present the ReLeGy package.
 
