@@ -5,7 +5,6 @@ with open("README.md", "r") as fh:
 
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
-    requirements = [req for req in requirements if req.split('~=')[0] not in ['gensim','six','fastdtw','tensorflow-probability','tensorflow-addons']]
 
 setuptools.setup(
     name="relegy",
