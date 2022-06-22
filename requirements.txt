@@ -1,7 +1,7 @@
 fastdtw==0.3.4
 gensim==3.8.3
 networkx==2.6.3
-numpy==1.21.4
+numpy==1.22.0
 scipy==1.7.2
 six==1.16.0
 tensorflow==2.7.0
