@@ -65,26 +65,27 @@ class LINE(Model):
         return -tf.reduce_sum(tf.multiply(self.__A,
                                           tf.math.log(tf.divide(1,
                                                                 1+tf.math.exp(tf.matmul(-self.__U1,
-                                                                                        tf.transpose(self.__U2))))))) + tf.reduce_sum(self.__lmbd1 * (tf.abs(self.__U1)+tf.abs(self.__U2)))
+                                                                                        tf.transpose(self.__U1))))))) + tf.reduce_sum(self.__lmbd1 * (tf.abs(self.__U1)))
 
     def __get_loss2(self):
-        d_temp = tf.reduce_sum(self.__A, axis=1)
-        d = tf.tile(tf.reshape(d_temp, [self.__N, 1]), tf.constant([1, self.__N]))
-        mlog = tf.math.log(tf.divide(self.__A, d))
-        return -tf.reduce_sum(tf.math.multiply_no_nan(mlog, self.__A)) + tf.reduce_sum(self.__lmbd2 * (tf.abs(self.__U1)+tf.abs(self.__U2)))
+        tot_probs = tf.convert_to_tensor([tf.reduce_sum(tf.math.exp(tf.matmul(self.__U2, tf.expand_dims(self.__U2[i, :], axis=1)))) for i in range(self.__U2.shape[0])], dtype="float32")
+        return -tf.reduce_sum(tf.multiply(self.__A,
+                                          tf.math.log(tf.divide(tf.math.exp(tf.matmul(self.__U2,
+                                                                                      tf.transpose(self.__U2))),
+                                                                tot_probs))))
 
     def __get_gradients1(self):
         with tf.GradientTape() as tape:
-            tape.watch([self.__U1, self.__U2])
+            tape.watch([self.__U1])
             L = self.__get_loss1()
-        g = tape.gradient(L, [self.__U1, self.__U2])
+        g = tape.gradient(L, [self.__U1])
         return g
 
     def __get_gradients2(self):
         with tf.GradientTape() as tape:
-            tape.watch([self.__U1, self.__U2])
+            tape.watch([self.__U2])
             L = self.__get_loss2()
-        g = tape.gradient(L, [self.__U1, self.__U2])
+        g = tape.gradient(L, [self.__U2])
         return g
 
     @Model._init_model_in_init_model_fit
@@ -127,9 +128,9 @@ class LINE(Model):
         """
         for i in range(num_iter):
             g1 = self.__get_gradients1()
-            self.__opt1.apply_gradients(zip(g1, [self.__U1, self.__U2]))
-            g2 = self.__get_gradients1()
-            self.__opt1.apply_gradients(zip(g2, [self.__U1, self.__U2]))
+            self.__opt1.apply_gradients(zip(g1, [self.__U1]))
+            g2 = self.__get_gradients2()
+            self.__opt2.apply_gradients(zip(g2, [self.__U2]))
             if verbose:
                 print("Epoch " + str(i + 1) + ": loss 1: " + str(self.__get_loss1().numpy()) + ", loss 2:" + str(self.__get_loss2().numpy()))
 
